@@ -50,6 +50,13 @@ func NewSQLite(dbPath string) (*SQLiteRepository, error) {
 		db.Close()
 		return nil, err
 	}
+	// Remove any pre-existing duplicates, then enforce uniqueness.
+	db.Exec(`DELETE FROM log_entries WHERE id NOT IN (
+		SELECT MIN(id) FROM log_entries
+		GROUP BY time, remote_addr, host, method, path, query, status
+	)`)
+	db.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_log_entries_unique
+		ON log_entries(time, remote_addr, host, method, path, query, status)`)
 	return &SQLiteRepository{db: db}, nil
 }
 
@@ -62,7 +69,7 @@ func (r *SQLiteRepository) InsertBatch(entries []models.LogEntry) error {
 		return err
 	}
 	defer tx.Rollback()
-	stmt, err := tx.Prepare(`INSERT INTO log_entries (time, remote_addr, host, method, path, query, protocol, status, bytes, city, country, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+	stmt, err := tx.Prepare(`INSERT OR IGNORE INTO log_entries (time, remote_addr, host, method, path, query, protocol, status, bytes, city, country, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
 		return err
 	}
