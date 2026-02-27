@@ -1,155 +1,189 @@
-{{define "title"}}Dashboard - Nginx Log Analyzer{{end}}
-
-{{define "head"}}
+{{define "title"}}Dashboard - Nginx Log Analyzer{{end}} {{define "head"}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-{{end}}
-
-{{define "content"}}
+{{end}} {{define "content"}}
 <div class="dashboard-page">
-<div class="columns is-multiline">
-  <div class="column is-3-desktop is-6-tablet">
-    <div class="box stat-card">
-      <div class="stat-label">Requests (24h)</div>
-      <div class="stat-value">{{.TotalRequests24h}}</div>
+  <div class="columns is-multiline">
+    <div class="column is-3-desktop is-6-tablet">
+      <div class="box stat-card">
+        <div class="stat-label">Requests (24h)</div>
+        <div class="stat-value">{{.TotalRequests24h}}</div>
+      </div>
+    </div>
+    <div class="column is-3-desktop is-6-tablet">
+      <div class="box stat-card">
+        <div class="stat-label">Requests (7d)</div>
+        <div class="stat-value">{{.TotalRequests7d}}</div>
+      </div>
+    </div>
+    <div class="column is-3-desktop is-6-tablet">
+      <div class="box stat-card">
+        <div class="stat-label">Error Rate (24h)</div>
+        <div class="stat-value">{{printf "%.1f" .ErrorRate24h}}%</div>
+      </div>
+    </div>
+    <div class="column is-3-desktop is-6-tablet">
+      <div class="box stat-card">
+        <div class="stat-label">Unique IPs (24h)</div>
+        <div class="stat-value">{{.UniqueIPs24h}}</div>
+      </div>
     </div>
   </div>
-  <div class="column is-3-desktop is-6-tablet">
-    <div class="box stat-card">
-      <div class="stat-label">Requests (7d)</div>
-      <div class="stat-value">{{.TotalRequests7d}}</div>
+
+  <div class="columns">
+    <div class="column is-half">
+      <div class="box">
+        <h3 class="subtitle is-5">Requests Over Time</h3>
+        <div class="chart-container"><canvas id="chartRequests"></canvas></div>
+      </div>
+    </div>
+    <div class="column is-half">
+      <div class="box">
+        <h3 class="subtitle is-5">Status Distribution</h3>
+        <div class="chart-container"><canvas id="chartStatus"></canvas></div>
+      </div>
     </div>
   </div>
-  <div class="column is-3-desktop is-6-tablet">
-    <div class="box stat-card">
-      <div class="stat-label">Error Rate (24h)</div>
-      <div class="stat-value">{{printf "%.1f" .ErrorRate24h}}%</div>
+
+  <div class="columns">
+    <div class="column is-half">
+      <div class="box">
+        <h3 class="subtitle is-5">Top Countries</h3>
+        <div class="chart-container"><canvas id="chartCountries"></canvas></div>
+      </div>
+    </div>
+    <div class="column is-half">
+      <div class="box">
+        <h3 class="subtitle is-5">Top Paths</h3>
+        <div class="chart-container"><canvas id="chartPaths"></canvas></div>
+      </div>
     </div>
   </div>
-  <div class="column is-3-desktop is-6-tablet">
-    <div class="box stat-card">
-      <div class="stat-label">Unique IPs (24h)</div>
-      <div class="stat-value">{{.UniqueIPs24h}}</div>
-    </div>
-  </div>
-</div>
 
-<div class="columns">
-  <div class="column is-half">
-    <div class="box">
-      <h3 class="subtitle is-5">Requests Over Time</h3>
-      <div class="chart-container"><canvas id="chartRequests"></canvas></div>
-    </div>
-  </div>
-  <div class="column is-half">
-    <div class="box">
-      <h3 class="subtitle is-5">Status Distribution</h3>
-      <div class="chart-container"><canvas id="chartStatus"></canvas></div>
-    </div>
-  </div>
-</div>
+  <div id="chartDataByHour" hidden>{{.RequestsByHourJSON}}</div>
+  <div id="chartDataByStatus" hidden>{{.StatusDistJSON}}</div>
+  <div id="chartDataByCountry" hidden>{{.TopCountriesJSON}}</div>
+  <div id="chartDataByPath" hidden>{{.TopPathsJSON}}</div>
 
-<div class="columns">
-  <div class="column is-half">
-    <div class="box">
-      <h3 class="subtitle is-5">Top Countries</h3>
-      <div class="chart-container"><canvas id="chartCountries"></canvas></div>
-    </div>
-  </div>
-  <div class="column is-half">
-    <div class="box">
-      <h3 class="subtitle is-5">Top Paths</h3>
-      <div class="chart-container"><canvas id="chartPaths"></canvas></div>
-    </div>
-  </div>
-</div>
+  <script>
+    const byHour = JSON.parse(
+      document.getElementById("chartDataByHour").textContent || "[]",
+    );
+    const byStatus = JSON.parse(
+      document.getElementById("chartDataByStatus").textContent || "[]",
+    );
+    const byCountry = JSON.parse(
+      document.getElementById("chartDataByCountry").textContent || "[]",
+    );
+    const byPath = JSON.parse(
+      document.getElementById("chartDataByPath").textContent || "[]",
+    );
 
-<div id="chartDataByHour" hidden>{{.RequestsByHourJSON}}</div>
-<div id="chartDataByStatus" hidden>{{.StatusDistJSON}}</div>
-<div id="chartDataByCountry" hidden>{{.TopCountriesJSON}}</div>
-<div id="chartDataByPath" hidden>{{.TopPathsJSON}}</div>
+    const sharedScaleOpts = {
+      grid: { color: "rgba(0,0,0,.06)" },
+      ticks: { font: { size: 11 } },
+    };
 
-<script>
-  const byHour    = JSON.parse(document.getElementById('chartDataByHour').textContent || '[]');
-  const byStatus  = JSON.parse(document.getElementById('chartDataByStatus').textContent || '[]');
-  const byCountry = JSON.parse(document.getElementById('chartDataByCountry').textContent || '[]');
-  const byPath    = JSON.parse(document.getElementById('chartDataByPath').textContent || '[]');
+    if (byHour.length) {
+      new Chart(document.getElementById("chartRequests"), {
+        type: "line",
+        data: {
+          labels: byHour.map((h) => h.Hour.slice(5)),
+          datasets: [
+            {
+              label: "Requests",
+              data: byHour.map((h) => h.Count),
+              borderColor: "hsl(171, 100%, 41%)",
+              backgroundColor: "hsla(171, 100%, 41%, .12)",
+              fill: true,
+              tension: 0.3,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: sharedScaleOpts,
+            y: { ...sharedScaleOpts, beginAtZero: true },
+          },
+        },
+      });
+    }
 
-  const sharedScaleOpts = {
-    grid: { color: 'rgba(0,0,0,.06)' },
-    ticks: { font: { size: 11 } }
-  };
+    if (byStatus.length) {
+      const statusColors = byStatus.map((s) => {
+        if (s.Status < 300) return "#48c78e";
+        if (s.Status < 400) return "#3e8ed0";
+        if (s.Status < 500) return "#ffe08a";
+        return "#f14668";
+      });
+      new Chart(document.getElementById("chartStatus"), {
+        type: "doughnut",
+        data: {
+          labels: byStatus.map((s) => String(s.Status)),
+          datasets: [
+            {
+              data: byStatus.map((s) => s.Count),
+              backgroundColor: statusColors,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: "right" } },
+        },
+      });
+    }
 
-  if (byHour.length) {
-    new Chart(document.getElementById('chartRequests'), {
-      type: 'line',
-      data: {
-        labels: byHour.map(h => h.Hour.slice(5)),
-        datasets: [{
-          label: 'Requests',
-          data: byHour.map(h => h.Count),
-          borderColor: 'hsl(171, 100%, 41%)',
-          backgroundColor: 'hsla(171, 100%, 41%, .12)',
-          fill: true,
-          tension: .3
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: { x: sharedScaleOpts, y: { ...sharedScaleOpts, beginAtZero: true } }
-      }
-    });
-  }
+    if (byCountry.length) {
+      new Chart(document.getElementById("chartCountries"), {
+        type: "bar",
+        data: {
+          labels: byCountry.map((c) => c.Country || "(unknown)"),
+          datasets: [
+            {
+              label: "Requests",
+              data: byCountry.map((c) => c.Count),
+              borderRadius: 3,
+              backgroundColor: "hsl(217, 71%, 53%)",
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: "y",
+          plugins: { legend: { display: false } },
+          scales: { x: sharedScaleOpts, y: sharedScaleOpts },
+        },
+      });
+    }
 
-  if (byStatus.length) {
-    const statusColors = byStatus.map(s => {
-      if (s.Status < 300) return '#48c78e';
-      if (s.Status < 400) return '#3e8ed0';
-      if (s.Status < 500) return '#ffe08a';
-      return '#f14668';
-    });
-    new Chart(document.getElementById('chartStatus'), {
-      type: 'doughnut',
-      data: {
-        labels: byStatus.map(s => String(s.Status)),
-        datasets: [{ data: byStatus.map(s => s.Count), backgroundColor: statusColors }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'right' } }
-      }
-    });
-  }
-
-  if (byCountry.length) {
-    new Chart(document.getElementById('chartCountries'), {
-      type: 'bar',
-      data: {
-        labels: byCountry.map(c => c.Country || '(unknown)'),
-        datasets: [{ label: 'Requests', data: byCountry.map(c => c.Count), borderRadius: 3, backgroundColor: 'hsl(217, 71%, 53%)' }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false, indexAxis: 'y',
-        plugins: { legend: { display: false } },
-        scales: { x: sharedScaleOpts, y: sharedScaleOpts }
-      }
-    });
-  }
-
-  if (byPath.length) {
-    new Chart(document.getElementById('chartPaths'), {
-      type: 'bar',
-      data: {
-        labels: byPath.map(p => (p.Path || '/').substring(0, 40)),
-        datasets: [{ label: 'Requests', data: byPath.map(p => p.Count), borderRadius: 3, backgroundColor: 'hsl(171, 100%, 41%)' }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false, indexAxis: 'y',
-        plugins: { legend: { display: false } },
-        scales: { x: sharedScaleOpts, y: sharedScaleOpts }
-      }
-    });
-  }
-</script>
+    if (byPath.length) {
+      new Chart(document.getElementById("chartPaths"), {
+        type: "bar",
+        data: {
+          labels: byPath.map((p) => (p.Path || "/").substring(0, 40)),
+          datasets: [
+            {
+              label: "Requests",
+              data: byPath.map((p) => p.Count),
+              borderRadius: 3,
+              backgroundColor: "hsl(171, 100%, 41%)",
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: "y",
+          plugins: { legend: { display: false } },
+          scales: { x: sharedScaleOpts, y: sharedScaleOpts },
+        },
+      });
+    }
+  </script>
 </div>
 {{end}}

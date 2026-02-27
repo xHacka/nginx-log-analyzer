@@ -1,86 +1,130 @@
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Upload - Nginx Log Analyzer</title>
+    <script>
+      (() => {
+        try {
+          const stored = localStorage.getItem("theme");
+          const preferred = window.matchMedia("(prefers-color-scheme: dark)")
+            .matches
+            ? "dark"
+            : "light";
+          document.documentElement.setAttribute(
+            "data-theme",
+            stored || preferred,
+          );
+        } catch (_) {
+          document.documentElement.setAttribute("data-theme", "light");
+        }
+      })();
+    </script>
+    <link rel="stylesheet" href="/static/css/bulma.min.css" />
+    <link rel="stylesheet" href="/static/css/style.css" />
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Upload - Nginx Log Analyzer</title>
-  <script>
-    (() => {
-      try {
-        const stored = localStorage.getItem("theme");
-        const preferred = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-        document.documentElement.setAttribute("data-theme", stored || preferred);
-      } catch (_) {
-        document.documentElement.setAttribute("data-theme", "light");
-      }
-    })();
-  </script>
-  <link rel="stylesheet" href="/static/css/bulma.min.css" />
-  <link rel="stylesheet" href="/static/css/style.css" />
-</head>
-
-<body>
-  <nav class="navbar app-navbar" role="navigation" aria-label="main navigation">
-    <div class="container">
-      <div class="navbar-brand">
-        <a class="navbar-item is-size-5" href="/">Nginx Log Analyzer</a>
-        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="mainNav">
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
-        </a>
-      </div>
-      <div id="mainNav" class="navbar-menu">
-        <div class="navbar-end">
-          <a class="navbar-item" href="/">Dashboard</a>
-          <a class="navbar-item" href="/query">Query</a>
-          <a class="navbar-item is-active" href="/upload">Upload</a>
-          <div class="navbar-item">
-            <button id="themeToggle" class="button is-small theme-toggle" type="button">Switch to Dark</button>
+  <body>
+    <nav
+      class="navbar app-navbar"
+      role="navigation"
+      aria-label="main navigation"
+    >
+      <div class="container">
+        <div class="navbar-brand">
+          <a class="navbar-item is-size-5" href="/">Nginx Log Analyzer</a>
+          <a
+            role="button"
+            class="navbar-burger"
+            aria-label="menu"
+            aria-expanded="false"
+            data-target="mainNav"
+          >
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+          </a>
+        </div>
+        <div id="mainNav" class="navbar-menu">
+          <div class="navbar-end">
+            <a class="navbar-item" href="/">Dashboard</a>
+            <a class="navbar-item" href="/query">Query</a>
+            <a class="navbar-item is-active" href="/upload">Upload</a>
+            <div class="navbar-item">
+              <button
+                id="themeToggle"
+                class="button is-small theme-toggle"
+                type="button"
+              >
+                Switch to Dark
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </nav>
+    </nav>
 
-  <section class="section">
-    <div class="container">
-      <p class="subtitle is-6">
-        Upload a nginx JSON log file (one JSON object per line).
-      </p>
+    <section class="section">
+      <div class="container">
+        <p class="subtitle is-6">
+          Upload a nginx JSON log file (one JSON object per line).
+        </p>
 
-      <div class="drop-zone" id="dropZone">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.4">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-          <polyline points="17 8 12 3 7 8" />
-          <line x1="12" y1="3" x2="12" y2="15" />
-        </svg>
-        <p>Drag & drop a log file here, or click to browse</p>
-        <input type="file" id="fileInput" name="logfile" accept=".json,.log,text/plain" />
+        <div class="drop-zone" id="dropZone">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            style="opacity: 0.4"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          <p>Drag & drop a log file here, or click to browse</p>
+          <input
+            type="file"
+            id="fileInput"
+            name="logfile"
+            accept=".json,.log,text/plain"
+          />
+        </div>
+
+        <div class="field is-grouped mt-4">
+          <div class="control">
+            <button
+              class="button is-primary"
+              type="button"
+              id="uploadBtn"
+              disabled
+            >
+              Upload
+            </button>
+          </div>
+          <div class="control">
+            <span class="tag is-medium" id="fileName">No file selected</span>
+          </div>
+        </div>
+
+        <div
+          id="alertSuccess"
+          class="notification is-success hidden mt-4"
+        ></div>
+        <div id="alertError" class="notification is-danger hidden mt-4"></div>
       </div>
 
-      <div class="field is-grouped mt-4">
-        <div class="control">
-          <button class="button is-primary" type="button" id="uploadBtn" disabled>
-            Upload
-          </button>
-        </div>
-        <div class="control">
-          <span class="tag is-medium" id="fileName">No file selected</span>
-        </div>
-      </div>
-
-      <div id="alertSuccess" class="notification is-success hidden mt-4"></div>
-      <div id="alertError" class="notification is-danger hidden mt-4"></div>
-    </div>
-
-    <div class="container mt-5">
-      <div class="box example-card">
-        <p class="subtitle is-6 mb-3">Example JSON line format</p>
-        <pre class="json-preview"><code>{
+      <div class="container mt-5">
+        <div class="box example-card">
+          <p class="subtitle is-6 mb-3">Example JSON line format</p>
+          <pre class="json-preview"><code>{
           <span class="json-key">"time"</span>       : <span class="json-string">"$msec"</span>,                 <span class="json-comment">// epoch seconds with milliseconds</span>
           <span class="json-key">"remote_addr"</span>: <span class="json-string">"$remote_addr"</span>,          <span class="json-comment">// client IP address</span>
           <span class="json-key">"host"</span>       : <span class="json-string">"$host"</span>,                 <span class="json-comment">// requested host/domain</span>
@@ -94,123 +138,135 @@
           <span class="json-key">"country"</span>    : <span class="json-string">"$geo_country_code"</span>,     <span class="json-comment">// geoip country code</span>
           <span class="json-key">"user_agent"</span> : <span class="json-string">"$http_user_agent"</span>       <span class="json-comment">// client user agent</span>
 }</code></pre>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const applyTheme = (theme) => {
-        document.documentElement.setAttribute("data-theme", theme);
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const applyTheme = (theme) => {
+          document.documentElement.setAttribute("data-theme", theme);
+          const themeToggle = document.getElementById("themeToggle");
+          if (themeToggle) {
+            themeToggle.textContent =
+              theme === "dark" ? "Switch to Light" : "Switch to Dark";
+            themeToggle.setAttribute(
+              "aria-label",
+              theme === "dark"
+                ? "Switch to light theme"
+                : "Switch to dark theme",
+            );
+          }
+        };
+
+        const currentTheme =
+          document.documentElement.getAttribute("data-theme") || "light";
+        applyTheme(currentTheme);
+
+        const burger = document.querySelector(".navbar-burger");
+        if (burger) {
+          burger.addEventListener("click", () => {
+            const target = document.getElementById(burger.dataset.target);
+            burger.classList.toggle("is-active");
+            target.classList.toggle("is-active");
+          });
+        }
+
         const themeToggle = document.getElementById("themeToggle");
         if (themeToggle) {
-          themeToggle.textContent = theme === "dark" ? "Switch to Light" : "Switch to Dark";
-          themeToggle.setAttribute("aria-label", theme === "dark" ? "Switch to light theme" : "Switch to dark theme");
+          themeToggle.addEventListener("click", () => {
+            const current =
+              document.documentElement.getAttribute("data-theme") || "light";
+            const next = current === "dark" ? "light" : "dark";
+            applyTheme(next);
+            localStorage.setItem("theme", next);
+          });
         }
-      };
+      });
 
-      const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
-      applyTheme(currentTheme);
+      const dropZone = document.getElementById("dropZone");
+      const fileInput = document.getElementById("fileInput");
+      const uploadBtn = document.getElementById("uploadBtn");
+      const fileNameEl = document.getElementById("fileName");
+      const alertOk = document.getElementById("alertSuccess");
+      const alertErr = document.getElementById("alertError");
 
-      const burger = document.querySelector(".navbar-burger");
-      if (burger) {
-        burger.addEventListener("click", () => {
-          const target = document.getElementById(burger.dataset.target);
-          burger.classList.toggle("is-active");
-          target.classList.toggle("is-active");
-        });
+      let selectedFile = null;
+
+      dropZone.addEventListener("click", () => fileInput.click());
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("drag-over");
+      });
+      dropZone.addEventListener("dragleave", () =>
+        dropZone.classList.remove("drag-over"),
+      );
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("drag-over");
+        if (e.dataTransfer.files.length) setFile(e.dataTransfer.files[0]);
+      });
+      fileInput.addEventListener("change", () => {
+        if (fileInput.files.length) setFile(fileInput.files[0]);
+      });
+
+      function setFile(f) {
+        selectedFile = f;
+        fileNameEl.textContent = f.name + " (" + formatBytes(f.size) + ")";
+        uploadBtn.disabled = false;
+        hideAlerts();
       }
 
-      const themeToggle = document.getElementById("themeToggle");
-      if (themeToggle) {
-        themeToggle.addEventListener("click", () => {
-          const current = document.documentElement.getAttribute("data-theme") || "light";
-          const next = current === "dark" ? "light" : "dark";
-          applyTheme(next);
-          localStorage.setItem("theme", next);
-        });
-      }
-    });
+      uploadBtn.addEventListener("click", async () => {
+        if (!selectedFile) return;
+        uploadBtn.disabled = true;
+        uploadBtn.classList.add("is-loading");
+        hideAlerts();
 
-    const dropZone = document.getElementById("dropZone");
-    const fileInput = document.getElementById("fileInput");
-    const uploadBtn = document.getElementById("uploadBtn");
-    const fileNameEl = document.getElementById("fileName");
-    const alertOk = document.getElementById("alertSuccess");
-    const alertErr = document.getElementById("alertError");
+        const fd = new FormData();
+        fd.append("logfile", selectedFile);
 
-    let selectedFile = null;
+        const csrfToken =
+          (document.cookie.match(/(?:^|; )csrf_token=([^;]*)/) || [])[1] || "";
 
-    dropZone.addEventListener("click", () => fileInput.click());
-    dropZone.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      dropZone.classList.add("drag-over");
-    });
-    dropZone.addEventListener("dragleave", () =>
-      dropZone.classList.remove("drag-over"),
-    );
-    dropZone.addEventListener("drop", (e) => {
-      e.preventDefault();
-      dropZone.classList.remove("drag-over");
-      if (e.dataTransfer.files.length) setFile(e.dataTransfer.files[0]);
-    });
-    fileInput.addEventListener("change", () => {
-      if (fileInput.files.length) setFile(fileInput.files[0]);
-    });
-
-    function setFile(f) {
-      selectedFile = f;
-      fileNameEl.textContent = f.name + " (" + formatBytes(f.size) + ")";
-      uploadBtn.disabled = false;
-      hideAlerts();
-    }
-
-    uploadBtn.addEventListener("click", async () => {
-      if (!selectedFile) return;
-      uploadBtn.disabled = true;
-      uploadBtn.classList.add("is-loading");
-      hideAlerts();
-
-      const fd = new FormData();
-      fd.append("logfile", selectedFile);
-
-      const csrfToken = (document.cookie.match(/(?:^|; )csrf_token=([^;]*)/) || [])[1] || '';
-
-      try {
-        const res = await fetch("/upload", { method: "POST", body: fd, headers: { "X-CSRF-Token": csrfToken } });
-        if (res.ok) {
-          const data = await res.json();
-          alertOk.textContent =
-            "Successfully ingested " +
-            data.ingested.toLocaleString() +
-            " log entries.";
-          alertOk.classList.remove("hidden");
-          selectedFile = null;
-          fileNameEl.textContent = "No file selected";
-        } else {
-          alertErr.textContent = "Upload failed: " + (await res.text());
+        try {
+          const res = await fetch("/upload", {
+            method: "POST",
+            body: fd,
+            headers: { "X-CSRF-Token": csrfToken },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            alertOk.textContent =
+              "Successfully ingested " +
+              data.ingested.toLocaleString() +
+              " log entries.";
+            alertOk.classList.remove("hidden");
+            selectedFile = null;
+            fileNameEl.textContent = "No file selected";
+          } else {
+            alertErr.textContent = "Upload failed: " + (await res.text());
+            alertErr.classList.remove("hidden");
+          }
+        } catch (e) {
+          alertErr.textContent = "Network error: " + e.message;
           alertErr.classList.remove("hidden");
         }
-      } catch (e) {
-        alertErr.textContent = "Network error: " + e.message;
-        alertErr.classList.remove("hidden");
+
+        uploadBtn.classList.remove("is-loading");
+        uploadBtn.disabled = !selectedFile;
+      });
+
+      function hideAlerts() {
+        alertOk.classList.add("hidden");
+        alertErr.classList.add("hidden");
       }
 
-      uploadBtn.classList.remove("is-loading");
-      uploadBtn.disabled = !selectedFile;
-    });
-
-    function hideAlerts() {
-      alertOk.classList.add("hidden");
-      alertErr.classList.add("hidden");
-    }
-
-    function formatBytes(b) {
-      if (b < 1024) return b + " B";
-      if (b < 1048576) return (b / 1024).toFixed(1) + " KB";
-      return (b / 1048576).toFixed(1) + " MB";
-    }
-  </script>
-</body>
-
+      function formatBytes(b) {
+        if (b < 1024) return b + " B";
+        if (b < 1048576) return (b / 1024).toFixed(1) + " KB";
+        return (b / 1048576).toFixed(1) + " MB";
+      }
+    </script>
+  </body>
 </html>

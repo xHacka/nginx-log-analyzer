@@ -1,6 +1,7 @@
 {{define "base"}}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,6 +21,7 @@
   <link rel="stylesheet" href="/static/css/style.css">
   {{block "head" .}}{{end}}
 </head>
+
 <body class="page-{{.PageID}}">
   <nav class="navbar app-navbar" role="navigation" aria-label="main navigation">
     <div class="container">
@@ -34,9 +36,10 @@
       </div>
       <div id="mainNav" class="navbar-menu">
         <div class="navbar-end">
-          <a class="navbar-item{{if eq .PageID "dashboard"}} is-active{{end}}" href="/">Dashboard</a>
-          <a class="navbar-item{{if eq .PageID "query"}} is-active{{end}}" href="/query">Query</a>
-          {{if .UploadEnabled}}<a class="navbar-item{{if eq .PageID "upload"}} is-active{{end}}" href="/upload">Upload</a>{{end}}
+          <a class="navbar-item{{if eq .PageID " dashboard"}} is-active{{end}}" href="/">Dashboard</a>
+          <a class="navbar-item{{if eq .PageID " query"}} is-active{{end}}" href="/query">Query</a>
+          {{if .UploadEnabled}}<a class="navbar-item{{if eq .PageID " upload"}} is-active{{end}}"
+            href="/upload">Upload</a>{{end}}
           <div class="navbar-item">
             <button id="themeToggle" class="button is-small theme-toggle" type="button">Switch to Dark</button>
           </div>
@@ -45,7 +48,7 @@
     </div>
   </nav>
 
-  <section class="section{{if eq .PageID "dashboard"}} section-dashboard{{end}}">
+  <section class="section{{if eq .PageID " dashboard"}} section-dashboard{{end}}">
     {{if eq .PageID "query"}}
     <div class="query-layout">
       {{block "content" .}}{{end}}
@@ -92,5 +95,6 @@
     });
   </script>
 </body>
+
 </html>
 {{end}}
