@@ -9,7 +9,8 @@ import (
 )
 
 type UploadHandler struct {
-	Repo repository.LogRepository
+	Repo  repository.LogRepository
+	Rules ingest.FilterRules
 }
 
 func (h *UploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +25,7 @@ func (h *UploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	n, err := ingest.IngestReader(file, h.Repo)
+	n, err := ingest.IngestReader(file, h.Repo, h.Rules)
 	if err != nil {
 		http.Error(w, "Failed to ingest: "+err.Error(), http.StatusInternalServerError)
 		return

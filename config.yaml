@@ -2,3 +2,9 @@ log_path: ""  # empty = disable local ingest, e.g. "/var/log/nginx/access.json"
 db_path: "./data/access.db"
 retention_days: 30
 listen: ":8080"
+ignore:
+  whitelisted_ips: []        # e.g. ["127.0.0.1", "10.0.0.10"]
+  skip_extensions: []        # e.g. [".css", ".js", ".png", ".jpg", ".ico", ".svg"]
+  skip_methods: []           # e.g. ["OPTIONS", "HEAD"]
+  skip_status_codes: []      # e.g. [301, 302, 304]
+  skip_path_prefixes: []     # e.g. ["/health", "/metrics", "/static/"]

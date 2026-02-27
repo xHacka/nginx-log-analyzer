@@ -34,6 +34,13 @@ func main() {
 	}
 	defer sqliteRepo.Close()
 	var repo repository.LogRepository = sqliteRepo
+	rules := ingest.NewFilterRules(
+		cfg.Ignore.WhitelistedIPs,
+		cfg.Ignore.SkipExtensions,
+		cfg.Ignore.SkipMethods,
+		cfg.Ignore.SkipStatusCodes,
+		cfg.Ignore.SkipPathPrefixes,
+	)
 
 	funcMap := template.FuncMap{
 		"formatTime": func(t float64) string {
@@ -69,7 +76,7 @@ func main() {
 
 	dh := &handlers.DashboardHandler{Repo: repo, Template: tmplDashboard}
 	qh := &handlers.QueryHandler{Repo: repo, Template: tmplQuery}
-	uh := &handlers.UploadHandler{Repo: repo}
+	uh := &handlers.UploadHandler{Repo: repo, Rules: rules}
 	r.Get("/", dh.ServeHTTP)
 	r.Get("/query", qh.ServeHTTP)
 	r.Post("/upload", uh.ServeHTTP)
@@ -103,7 +110,7 @@ func main() {
 	if cfg.LogPath != "" {
 		stopTail := make(chan struct{})
 		go func() {
-			if err := ingest.ReadFullFileAndTail(cfg.LogPath, repo, stopTail); err != nil {
+			if err := ingest.ReadFullFileAndTail(cfg.LogPath, repo, rules, stopTail); err != nil {
 				log.Printf("tail: %v", err)
 			}
 		}()

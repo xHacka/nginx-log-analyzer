@@ -11,6 +11,15 @@ type Config struct {
 	DBPath       string `yaml:"db_path"`
 	RetentionDays int   `yaml:"retention_days"`
 	Listen       string `yaml:"listen"`
+	Ignore       IgnoreConfig `yaml:"ignore"`
+}
+
+type IgnoreConfig struct {
+	WhitelistedIPs []string `yaml:"whitelisted_ips"`
+	SkipExtensions []string `yaml:"skip_extensions"`
+	SkipMethods    []string `yaml:"skip_methods"`
+	SkipStatusCodes []int   `yaml:"skip_status_codes"`
+	SkipPathPrefixes []string `yaml:"skip_path_prefixes"`
 }
 
 func Load(path string) (*Config, error) {
