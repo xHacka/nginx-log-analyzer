@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/xHacka/nginx-log-analyzer/internal/models"
@@ -194,11 +195,7 @@ func toRepoFilters(f QueryFormFilters) repository.QueryFilters {
 			rf.TimeTo = &t
 		}
 	}
-	if f.Status != "" {
-		if s, err := strconv.Atoi(f.Status); err == nil {
-			rf.Status = &s
-		}
-	}
+	rf.Status = strings.TrimSpace(f.Status)
 	rf.Country = f.Country
 	rf.PathContains = f.PathContains
 	rf.Method = f.Method

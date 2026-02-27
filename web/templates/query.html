@@ -60,7 +60,7 @@
           <div class="field">
             <label class="label is-small" for="f-status">Status</label>
             <div class="control">
-              <input class="input is-small" type="number" id="f-status" name="status" placeholder="e.g. 200" value="{{.Filters.Status}}" min="100" max="599">
+              <input class="input is-small" type="text" id="f-status" name="status" placeholder="200,203 or -404,-500" value="{{.Filters.Status}}">
             </div>
           </div>
           <div class="field">

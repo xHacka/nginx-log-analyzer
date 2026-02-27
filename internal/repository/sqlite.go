@@ -2,6 +2,8 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -86,29 +88,74 @@ func (r *SQLiteRepository) Query(filters QueryFilters, limit, offset int) ([]mod
 		where = append(where, "time <= ?")
 		args = append(args, float64(filters.TimeTo.UnixNano())/1e9)
 	}
-	if filters.Status != nil {
-		where = append(where, "status = ?")
-		args = append(args, *filters.Status)
+	if filters.Status != "" {
+		includes, excludes := parseIntFilter(filters.Status)
+		if len(includes) > 0 {
+			placeholders := make([]string, len(includes))
+			for i, v := range includes {
+				placeholders[i] = "?"
+				args = append(args, v)
+			}
+			where = append(where, "status IN ("+strings.Join(placeholders, ",")+")")
+		}
+		if len(excludes) > 0 {
+			placeholders := make([]string, len(excludes))
+			for i, v := range excludes {
+				placeholders[i] = "?"
+				args = append(args, v)
+			}
+			where = append(where, "status NOT IN ("+strings.Join(placeholders, ",")+")")
+		}
 	}
 	if filters.Country != "" {
-		where = append(where, "country = ?")
-		args = append(args, filters.Country)
+		includes, excludes := parseTextFilter(filters.Country)
+		clause, vals := buildTextMatchClause("country", includes, excludes, false)
+		if clause != "" {
+			where = append(where, clause)
+			for _, v := range vals {
+				args = append(args, v)
+			}
+		}
 	}
 	if filters.PathContains != "" {
-		where = append(where, "path LIKE ?")
-		args = append(args, "%"+filters.PathContains+"%")
+		includes, excludes := parseTextFilter(filters.PathContains)
+		clause, vals := buildTextMatchClause("path", includes, excludes, true)
+		if clause != "" {
+			where = append(where, clause)
+			for _, v := range vals {
+				args = append(args, v)
+			}
+		}
 	}
 	if filters.Method != "" {
-		where = append(where, "method = ?")
-		args = append(args, filters.Method)
+		includes, excludes := parseTextFilter(filters.Method)
+		clause, vals := buildTextMatchClause("method", includes, excludes, false)
+		if clause != "" {
+			where = append(where, clause)
+			for _, v := range vals {
+				args = append(args, v)
+			}
+		}
 	}
 	if filters.Host != "" {
-		where = append(where, "host = ?")
-		args = append(args, filters.Host)
+		includes, excludes := parseTextFilter(filters.Host)
+		clause, vals := buildTextMatchClause("host", includes, excludes, false)
+		if clause != "" {
+			where = append(where, clause)
+			for _, v := range vals {
+				args = append(args, v)
+			}
+		}
 	}
 	if filters.UserAgentContains != "" {
-		where = append(where, "user_agent LIKE ?")
-		args = append(args, "%"+filters.UserAgentContains+"%")
+		includes, excludes := parseTextFilter(filters.UserAgentContains)
+		clause, vals := buildTextMatchClause("user_agent", includes, excludes, true)
+		if clause != "" {
+			where = append(where, clause)
+			for _, v := range vals {
+				args = append(args, v)
+			}
+		}
 	}
 
 	whereClause := ""
@@ -255,4 +302,74 @@ func (r *SQLiteRepository) DeleteOlderThan(t time.Time) error {
 
 func (r *SQLiteRepository) Close() error {
 	return r.db.Close()
+}
+
+func parseTextFilter(raw string) (includes []string, excludes []string) {
+	for _, token := range strings.Split(raw, ",") {
+		t := strings.TrimSpace(token)
+		if t == "" {
+			continue
+		}
+		if strings.HasPrefix(t, "-") {
+			t = strings.TrimSpace(strings.TrimPrefix(t, "-"))
+			if t != "" {
+				excludes = append(excludes, t)
+			}
+			continue
+		}
+		includes = append(includes, t)
+	}
+	return includes, excludes
+}
+
+func parseIntFilter(raw string) (includes []int, excludes []int) {
+	for _, token := range strings.Split(raw, ",") {
+		t := strings.TrimSpace(token)
+		if t == "" {
+			continue
+		}
+		if strings.HasPrefix(t, "-") {
+			n, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(t, "-")))
+			if err == nil {
+				excludes = append(excludes, n)
+			}
+			continue
+		}
+		n, err := strconv.Atoi(t)
+		if err == nil {
+			includes = append(includes, n)
+		}
+	}
+	return includes, excludes
+}
+
+func buildTextMatchClause(column string, includes []string, excludes []string, contains bool) (string, []interface{}) {
+	var parts []string
+	var args []interface{}
+
+	if len(includes) > 0 {
+		var includeParts []string
+		for _, v := range includes {
+			if contains {
+				includeParts = append(includeParts, fmt.Sprintf("%s LIKE ?", column))
+				args = append(args, "%"+v+"%")
+			} else {
+				includeParts = append(includeParts, fmt.Sprintf("%s = ?", column))
+				args = append(args, v)
+			}
+		}
+		parts = append(parts, "("+strings.Join(includeParts, " OR ")+")")
+	}
+
+	for _, v := range excludes {
+		if contains {
+			parts = append(parts, fmt.Sprintf("%s NOT LIKE ?", column))
+			args = append(args, "%"+v+"%")
+		} else {
+			parts = append(parts, fmt.Sprintf("%s <> ?", column))
+			args = append(args, v)
+		}
+	}
+
+	return strings.Join(parts, " AND "), args
 }

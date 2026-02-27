@@ -9,7 +9,7 @@ import (
 type QueryFilters struct {
 	TimeFrom   *time.Time
 	TimeTo     *time.Time
-	Status     *int
+	Status     string
 	Country    string
 	PathContains string
 	Method     string
