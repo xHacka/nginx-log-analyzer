@@ -98,7 +98,16 @@
   </div>
   <div class="level-right">
     <div class="level-item">
-      <p class="is-size-7 has-text-grey">Showing {{len .Entries}} entries</p>
+      <p class="is-size-7 has-text-grey mr-3">Showing {{len .Entries}} entries</p>
+    </div>
+    <div class="level-item">
+      <div class="field has-addons">
+        {{range .PageSizes}}
+        <p class="control">
+          <a class="button is-small{{if .Active}} is-primary{{end}}" href="{{.URL}}">{{.Size}}</a>
+        </p>
+        {{end}}
+      </div>
     </div>
   </div>
 </div>
@@ -141,18 +150,16 @@
 </div>
 
 <nav class="pagination is-centered is-small mt-5" role="navigation" aria-label="pagination">
-  {{if .PrevURL}}
-  <a class="pagination-previous" href="{{.PrevURL}}">Previous</a>
-  {{else}}
-  <a class="pagination-previous" disabled>Previous</a>
-  {{end}}
-  {{if .NextURL}}
-  <a class="pagination-next" href="{{.NextURL}}">Next</a>
-  {{else}}
-  <a class="pagination-next" disabled>Next</a>
-  {{end}}
   <ul class="pagination-list">
+    <li>
+      {{if .PrevURL}}<a class="pagination-link" href="{{.PrevURL}}">&laquo; Prev</a>
+      {{else}}<span class="pagination-link" disabled>&laquo; Prev</span>{{end}}
+    </li>
     <li><span class="pagination-link is-current">{{.Page}} / {{.Pages}}</span></li>
+    <li>
+      {{if .NextURL}}<a class="pagination-link" href="{{.NextURL}}">Next &raquo;</a>
+      {{else}}<span class="pagination-link" disabled>Next &raquo;</span>{{end}}
+    </li>
   </ul>
 </nav>
 </div>

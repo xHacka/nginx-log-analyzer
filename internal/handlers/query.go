@@ -12,12 +12,13 @@ import (
 	"github.com/xHacka/nginx-log-analyzer/internal/repository"
 )
 
-const pageSize = 50
+var allowedPageSizes = []int{25, 50, 100, 250, 500}
 
 type QueryHandler struct {
-	Repo          repository.LogRepository
-	Template      *template.Template
-	UploadEnabled bool
+	Repo            repository.LogRepository
+	Template        *template.Template
+	UploadEnabled   bool
+	DefaultPageSize int
 }
 
 type SortableColumn struct {
@@ -28,6 +29,12 @@ type SortableColumn struct {
 	Desc    bool
 }
 
+type PageSizeOption struct {
+	Size   int
+	Active bool
+	URL    string
+}
+
 type QueryPageData struct {
 	PageID        string
 	UploadEnabled bool
@@ -35,6 +42,8 @@ type QueryPageData struct {
 	Total         int
 	Page          int
 	Pages         int
+	PageSize      int
+	PageSizes     []PageSizeOption
 	Filters       QueryFormFilters
 	PrevURL       string
 	NextURL       string
@@ -56,6 +65,17 @@ type QueryFormFilters struct {
 
 func (h *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	filters := parseQueryFilters(r)
+
+	pageSize := h.DefaultPageSize
+	if ps := r.URL.Query().Get("page_size"); ps != "" {
+		if n, err := strconv.Atoi(ps); err == nil {
+			pageSize = n
+		}
+	}
+	if !isAllowedPageSize(pageSize) {
+		pageSize = h.DefaultPageSize
+	}
+
 	page := 1
 	if p := r.URL.Query().Get("page"); p != "" {
 		if n, err := strconv.Atoi(p); err == nil && n > 0 {
@@ -79,44 +99,66 @@ func (h *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	baseQuery := r.URL.Query()
 	prevURL := ""
 	if page > 1 {
-		q := make(url.Values)
-		for k, v := range baseQuery {
-			if k != "page" {
-				q[k] = v
-			}
-		}
+		q := cloneValuesExcept(baseQuery, "page")
 		q.Set("page", strconv.Itoa(page-1))
 		prevURL = "?" + q.Encode()
 	}
 	nextURL := ""
 	if page < pages {
-		q := make(url.Values)
-		for k, v := range baseQuery {
-			if k != "page" {
-				q[k] = v
-			}
-		}
+		q := cloneValuesExcept(baseQuery, "page")
 		q.Set("page", strconv.Itoa(page+1))
 		nextURL = "?" + q.Encode()
 	}
 
 	columns := buildSortColumns(baseQuery, filters.SortBy, filters.SortDesc)
 
+	pageSizes := make([]PageSizeOption, len(allowedPageSizes))
+	for i, s := range allowedPageSizes {
+		q := cloneValuesExcept(baseQuery, "page_size", "page")
+		q.Set("page_size", strconv.Itoa(s))
+		pageSizes[i] = PageSizeOption{Size: s, Active: s == pageSize, URL: "?" + q.Encode()}
+	}
+
 	data := QueryPageData{
 		PageID:        "query",
 		UploadEnabled: h.UploadEnabled,
 		Entries:       entries,
-		Total:   total,
-		Page:    page,
-		Pages:   pages,
-		Filters: filters,
-		PrevURL: prevURL,
-		NextURL: nextURL,
-		Columns: columns,
+		Total:         total,
+		Page:          page,
+		Pages:         pages,
+		PageSize:      pageSize,
+		PageSizes:     pageSizes,
+		Filters:       filters,
+		PrevURL:       prevURL,
+		NextURL:       nextURL,
+		Columns:       columns,
 	}
 	if err := h.Template.ExecuteTemplate(w, "base", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+func isAllowedPageSize(n int) bool {
+	for _, s := range allowedPageSizes {
+		if s == n {
+			return true
+		}
+	}
+	return false
+}
+
+func cloneValuesExcept(src url.Values, keys ...string) url.Values {
+	skip := make(map[string]bool, len(keys))
+	for _, k := range keys {
+		skip[k] = true
+	}
+	q := make(url.Values)
+	for k, v := range src {
+		if !skip[k] {
+			q[k] = v
+		}
+	}
+	return q
 }
 
 func parseQueryFilters(r *http.Request) QueryFormFilters {

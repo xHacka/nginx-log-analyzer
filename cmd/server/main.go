@@ -76,7 +76,7 @@ func main() {
 	r.Use(middleware.Recoverer)
 
 	dh := &handlers.DashboardHandler{Repo: repo, Template: tmplDashboard, UploadEnabled: cfg.UploadEnabled}
-	qh := &handlers.QueryHandler{Repo: repo, Template: tmplQuery, UploadEnabled: cfg.UploadEnabled}
+	qh := &handlers.QueryHandler{Repo: repo, Template: tmplQuery, UploadEnabled: cfg.UploadEnabled, DefaultPageSize: cfg.PageSize}
 	uh := &handlers.UploadHandler{Repo: repo, Rules: rules}
 	r.Get("/", dh.ServeHTTP)
 	r.Get("/query", qh.ServeHTTP)

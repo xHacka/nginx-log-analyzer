@@ -13,6 +13,7 @@ type Config struct {
 	RetentionDays int   `yaml:"retention_days"`
 	Listen       string `yaml:"listen"`
 	UploadEnabled bool  `yaml:"upload_enabled"`
+	PageSize     int    `yaml:"page_size"`
 	Ignore       IgnoreConfig `yaml:"ignore"`
 }
 
@@ -38,6 +39,9 @@ func Load(path string) (*Config, error) {
 		if parsed, err := strconv.ParseBool(v); err == nil {
 			cfg.UploadEnabled = parsed
 		}
+	}
+	if cfg.PageSize <= 0 {
+		cfg.PageSize = 50
 	}
 	return &cfg, nil
 }

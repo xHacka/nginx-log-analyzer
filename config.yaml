@@ -3,6 +3,7 @@ db_path: "./data/access.db"
 retention_days: 30
 listen: ":8080"
 upload_enabled: true # can be overridden by env UPLOAD_ENABLED=true|false
+page_size: 50        # default rows per page on the query page (overridable via UI)
 ignore:
   whitelisted_ips: []        # e.g. ["127.0.0.1", "10.0.0.10"]
   skip_extensions: []        # e.g. [".css", ".js", ".png", ".jpg", ".ico", ".svg"]
