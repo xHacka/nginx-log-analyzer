@@ -5,6 +5,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Upload - Nginx Log Analyzer</title>
+  <script>
+    (() => {
+      try {
+        const stored = localStorage.getItem("theme");
+        const preferred = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", stored || preferred);
+      } catch (_) {
+        document.documentElement.setAttribute("data-theme", "light");
+      }
+    })();
+  </script>
   <link rel="stylesheet" href="/static/css/bulma.min.css" />
   <link rel="stylesheet" href="/static/css/style.css" />
 </head>
@@ -27,7 +38,7 @@
           <a class="navbar-item" href="/query">Query</a>
           <a class="navbar-item is-active" href="/upload">Upload</a>
           <div class="navbar-item">
-            <button id="themeToggle" class="button is-small theme-toggle" type="button">Dark</button>
+            <button id="themeToggle" class="button is-small theme-toggle" type="button">Switch to Dark</button>
           </div>
         </div>
       </div>
@@ -58,12 +69,12 @@
           </button>
         </div>
         <div class="control">
-          <span class="tag is-light is-medium" id="fileName">No file selected</span>
+          <span class="tag is-medium" id="fileName">No file selected</span>
         </div>
       </div>
 
-      <div id="alertSuccess" class="notification is-success is-light hidden mt-4"></div>
-      <div id="alertError" class="notification is-danger is-light hidden mt-4"></div>
+      <div id="alertSuccess" class="notification is-success hidden mt-4"></div>
+      <div id="alertError" class="notification is-danger hidden mt-4"></div>
     </div>
 
     <div class="container mt-5">
@@ -93,14 +104,13 @@
         document.documentElement.setAttribute("data-theme", theme);
         const themeToggle = document.getElementById("themeToggle");
         if (themeToggle) {
-          themeToggle.textContent = theme === "dark" ? "Dark" : "Light";
+          themeToggle.textContent = theme === "dark" ? "Switch to Light" : "Switch to Dark";
           themeToggle.setAttribute("aria-label", theme === "dark" ? "Switch to light theme" : "Switch to dark theme");
         }
       };
 
-      const stored = localStorage.getItem("theme");
-      const preferred = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-      applyTheme(stored || preferred);
+      const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+      applyTheme(currentTheme);
 
       const burger = document.querySelector(".navbar-burger");
       if (burger) {

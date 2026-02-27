@@ -5,6 +5,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{block "title" .}}Nginx Log Analyzer{{end}}</title>
+  <script>
+    (() => {
+      try {
+        const stored = localStorage.getItem('theme');
+        const preferred = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', stored || preferred);
+      } catch (_) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
   <link rel="stylesheet" href="/static/css/bulma.min.css">
   <link rel="stylesheet" href="/static/css/style.css">
   {{block "head" .}}{{end}}
@@ -27,7 +38,7 @@
           <a class="navbar-item{{if eq .PageID "query"}} is-active{{end}}" href="/query">Query</a>
           <a class="navbar-item{{if eq .PageID "upload"}} is-active{{end}}" href="/upload">Upload</a>
           <div class="navbar-item">
-            <button id="themeToggle" class="button is-small theme-toggle" type="button">Dark</button>
+            <button id="themeToggle" class="button is-small theme-toggle" type="button">Switch to Dark</button>
           </div>
         </div>
       </div>
@@ -52,14 +63,13 @@
         document.documentElement.setAttribute('data-theme', theme);
         const themeToggle = document.getElementById('themeToggle');
         if (themeToggle) {
-          themeToggle.textContent = theme === 'dark' ? 'Dark' : 'Light';
+          themeToggle.textContent = theme === 'dark' ? 'Switch to Light' : 'Switch to Dark';
           themeToggle.setAttribute('aria-label', theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
         }
       };
 
-      const stored = localStorage.getItem('theme');
-      const preferred = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-      applyTheme(stored || preferred);
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      applyTheme(currentTheme);
 
       const burger = document.querySelector('.navbar-burger');
       if (burger) {
