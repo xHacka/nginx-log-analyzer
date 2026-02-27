@@ -79,10 +79,12 @@ func main() {
 	uh := &handlers.UploadHandler{Repo: repo, Rules: rules}
 	r.Get("/", dh.ServeHTTP)
 	r.Get("/query", qh.ServeHTTP)
-	r.Post("/upload", uh.ServeHTTP)
-	r.Get("/upload", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "web/static/upload.html")
-	})
+	if cfg.UploadEnabled {
+		r.Post("/upload", uh.ServeHTTP)
+		r.Get("/upload", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, "web/static/upload.html")
+		})
+	}
 
 	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
 
