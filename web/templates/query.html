@@ -2,8 +2,7 @@
 {{define "head"}}{{end}}
 
 {{define "content"}}
-<h1 class="title">Query Logs</h1>
-
+<div class="query-page">
 <details class="box filter-panel" open>
   <summary>Filters</summary>
   <form method="get" action="/query">
@@ -128,9 +127,13 @@
         <td>{{.Host}}</td>
         <td><span class="method-tag">{{.Method}}</span></td>
         <td><code>{{.Path}}</code></td>
+        <td><code>{{.Query}}</code></td>
+        <td>{{.Protocol}}</td>
         <td><span class="tag status-badge {{statusClass .Status}}">{{.Status}}</span></td>
         <td>{{.Bytes}}</td>
+        <td>{{.City}}</td>
         <td>{{.Country}}</td>
+        <td class="ua-cell" title="{{.UserAgent}}">{{.UserAgent}}</td>
       </tr>
       {{end}}
     </tbody>
@@ -152,4 +155,5 @@
     <li><span class="pagination-link is-current">{{.Page}} / {{.Pages}}</span></li>
   </ul>
 </nav>
+</div>
 {{end}}

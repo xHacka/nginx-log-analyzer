@@ -10,10 +10,10 @@
   {{block "head" .}}{{end}}
 </head>
 <body>
-  <nav class="navbar" role="navigation" aria-label="main navigation">
+  <nav class="navbar app-navbar" role="navigation" aria-label="main navigation">
     <div class="container">
       <div class="navbar-brand">
-        <a class="navbar-item has-text-weight-bold is-size-5" href="/">Nginx Log Analyzer</a>
+        <a class="navbar-item is-size-5" href="/">Nginx Log Analyzer</a>
         <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="mainNav">
           <span aria-hidden="true"></span>
           <span aria-hidden="true"></span>
@@ -32,9 +32,15 @@
   </nav>
 
   <section class="section">
+    {{if eq .PageID "query"}}
+    <div class="query-layout">
+      {{block "content" .}}{{end}}
+    </div>
+    {{else}}
     <div class="container">
       {{block "content" .}}{{end}}
     </div>
+    {{end}}
   </section>
 
   <script>

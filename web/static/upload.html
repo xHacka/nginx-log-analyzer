@@ -1,17 +1,19 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Upload - Nginx Log Analyzer</title>
-  <link rel="stylesheet" href="/static/css/bulma.min.css">
-  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/bulma.min.css" />
+  <link rel="stylesheet" href="/static/css/style.css" />
 </head>
+
 <body>
-  <nav class="navbar is-dark" role="navigation" aria-label="main navigation">
+  <nav class="navbar app-navbar" role="navigation" aria-label="main navigation">
     <div class="container">
       <div class="navbar-brand">
-        <a class="navbar-item has-text-weight-bold is-size-5" href="/">Nginx Log Analyzer</a>
+        <a class="navbar-item is-size-5" href="/">Nginx Log Analyzer</a>
         <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="mainNav">
           <span aria-hidden="true"></span>
           <span aria-hidden="true"></span>
@@ -31,24 +33,26 @@
 
   <section class="section">
     <div class="container">
-      <h1 class="title">Upload Log File</h1>
-      <p class="subtitle is-6">Upload a nginx JSON log file (one JSON object per line).</p>
+      <p class="subtitle is-6">
+        Upload a nginx JSON log file (one JSON object per line).
+      </p>
 
       <div class="drop-zone" id="dropZone">
         <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
-             style="opacity:.4">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="17 8 12 3 7 8"/>
-          <line x1="12" y1="3" x2="12" y2="15"/>
+          stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.4">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" />
+          <line x1="12" y1="3" x2="12" y2="15" />
         </svg>
         <p>Drag & drop a log file here, or click to browse</p>
-        <input type="file" id="fileInput" name="logfile" accept=".json,.log,text/plain">
+        <input type="file" id="fileInput" name="logfile" accept=".json,.log,text/plain" />
       </div>
 
       <div class="field is-grouped mt-4">
         <div class="control">
-          <button class="button is-primary" type="button" id="uploadBtn" disabled>Upload</button>
+          <button class="button is-primary" type="button" id="uploadBtn" disabled>
+            Upload
+          </button>
         </div>
         <div class="control">
           <span class="tag is-light is-medium" id="fileName">No file selected</span>
@@ -58,91 +62,119 @@
       <div id="alertSuccess" class="notification is-success is-light hidden mt-4"></div>
       <div id="alertError" class="notification is-danger is-light hidden mt-4"></div>
     </div>
+
+    <div class="container mt-5">
+      <div class="box example-card">
+        <p class="subtitle is-6 mb-3">Example JSON line format</p>
+         <pre class="json-preview">
+            <code>{
+            <span class="json-key">"time"</span>       : <span class="json-string">"$msec"</span>,                 <span class="json-comment">// epoch seconds with milliseconds</span>
+            <span class="json-key">"remote_addr"</span>: <span class="json-string">"$remote_addr"</span>,          <span class="json-comment">// client IP address</span>
+            <span class="json-key">"host"</span>       : <span class="json-string">"$host"</span>,                 <span class="json-comment">// requested host/domain</span>
+            <span class="json-key">"method"</span>     : <span class="json-string">"$request_method"</span>,       <span class="json-comment">// HTTP method</span>
+            <span class="json-key">"path"</span>       : <span class="json-string">"$uri"</span>,                  <span class="json-comment">// URL path without query</span>
+            <span class="json-key">"q"</span>          : <span class="json-string">"$args"</span>,                 <span class="json-comment">// query string arguments</span>
+            <span class="json-key">"protocol"</span>   : <span class="json-string">"$server_protocol"</span>,      <span class="json-comment">// HTTP protocol version</span>
+            <span class="json-key">"status"</span>     : <span class="json-string">"$status"</span>,               <span class="json-comment">// response status code</span>
+            <span class="json-key">"bytes"</span>      : <span class="json-string">"$body_bytes_sent"</span>,      <span class="json-comment">// response size in bytes</span>
+            <span class="json-key">"city"</span>       : <span class="json-string">"$geo_city_name"</span>,        <span class="json-comment">// geoip city (if available)</span>
+            <span class="json-key">"country"</span>    : <span class="json-string">"$geo_country_code"</span>,     <span class="json-comment">// geoip country code</span>
+            <span class="json-key">"user_agent"</span> : <span class="json-string">"$http_user_agent"</span>       <span class="json-comment">// client user agent</span>
+          }</code>
+        </pre>
+      </div>
+    </div>
   </section>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const burger = document.querySelector('.navbar-burger');
+    document.addEventListener("DOMContentLoaded", () => {
+      const burger = document.querySelector(".navbar-burger");
       if (burger) {
-        burger.addEventListener('click', () => {
+        burger.addEventListener("click", () => {
           const target = document.getElementById(burger.dataset.target);
-          burger.classList.toggle('is-active');
-          target.classList.toggle('is-active');
+          burger.classList.toggle("is-active");
+          target.classList.toggle("is-active");
         });
       }
     });
 
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
-    const uploadBtn = document.getElementById('uploadBtn');
-    const fileNameEl = document.getElementById('fileName');
-    const alertOk  = document.getElementById('alertSuccess');
-    const alertErr = document.getElementById('alertError');
+    const dropZone = document.getElementById("dropZone");
+    const fileInput = document.getElementById("fileInput");
+    const uploadBtn = document.getElementById("uploadBtn");
+    const fileNameEl = document.getElementById("fileName");
+    const alertOk = document.getElementById("alertSuccess");
+    const alertErr = document.getElementById("alertError");
 
     let selectedFile = null;
 
-    dropZone.addEventListener('click', () => fileInput.click());
-    dropZone.addEventListener('dragover', e => {
+    dropZone.addEventListener("click", () => fileInput.click());
+    dropZone.addEventListener("dragover", (e) => {
       e.preventDefault();
-      dropZone.classList.add('drag-over');
+      dropZone.classList.add("drag-over");
     });
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-    dropZone.addEventListener('drop', e => {
+    dropZone.addEventListener("dragleave", () =>
+      dropZone.classList.remove("drag-over"),
+    );
+    dropZone.addEventListener("drop", (e) => {
       e.preventDefault();
-      dropZone.classList.remove('drag-over');
+      dropZone.classList.remove("drag-over");
       if (e.dataTransfer.files.length) setFile(e.dataTransfer.files[0]);
     });
-    fileInput.addEventListener('change', () => {
+    fileInput.addEventListener("change", () => {
       if (fileInput.files.length) setFile(fileInput.files[0]);
     });
 
     function setFile(f) {
       selectedFile = f;
-      fileNameEl.textContent = f.name + ' (' + formatBytes(f.size) + ')';
+      fileNameEl.textContent = f.name + " (" + formatBytes(f.size) + ")";
       uploadBtn.disabled = false;
       hideAlerts();
     }
 
-    uploadBtn.addEventListener('click', async () => {
+    uploadBtn.addEventListener("click", async () => {
       if (!selectedFile) return;
       uploadBtn.disabled = true;
-      uploadBtn.classList.add('is-loading');
+      uploadBtn.classList.add("is-loading");
       hideAlerts();
 
       const fd = new FormData();
-      fd.append('logfile', selectedFile);
+      fd.append("logfile", selectedFile);
 
       try {
-        const res = await fetch('/upload', { method: 'POST', body: fd });
+        const res = await fetch("/upload", { method: "POST", body: fd });
         if (res.ok) {
           const data = await res.json();
-          alertOk.textContent = 'Successfully ingested ' + data.ingested.toLocaleString() + ' log entries.';
-          alertOk.classList.remove('hidden');
+          alertOk.textContent =
+            "Successfully ingested " +
+            data.ingested.toLocaleString() +
+            " log entries.";
+          alertOk.classList.remove("hidden");
           selectedFile = null;
-          fileNameEl.textContent = 'No file selected';
+          fileNameEl.textContent = "No file selected";
         } else {
-          alertErr.textContent = 'Upload failed: ' + (await res.text());
-          alertErr.classList.remove('hidden');
+          alertErr.textContent = "Upload failed: " + (await res.text());
+          alertErr.classList.remove("hidden");
         }
       } catch (e) {
-        alertErr.textContent = 'Network error: ' + e.message;
-        alertErr.classList.remove('hidden');
+        alertErr.textContent = "Network error: " + e.message;
+        alertErr.classList.remove("hidden");
       }
 
-      uploadBtn.classList.remove('is-loading');
+      uploadBtn.classList.remove("is-loading");
       uploadBtn.disabled = !selectedFile;
     });
 
     function hideAlerts() {
-      alertOk.classList.add('hidden');
-      alertErr.classList.add('hidden');
+      alertOk.classList.add("hidden");
+      alertErr.classList.add("hidden");
     }
 
     function formatBytes(b) {
-      if (b < 1024) return b + ' B';
-      if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
-      return (b / 1048576).toFixed(1) + ' MB';
+      if (b < 1024) return b + " B";
+      if (b < 1048576) return (b / 1024).toFixed(1) + " KB";
+      return (b / 1048576).toFixed(1) + " MB";
     }
   </script>
 </body>
+
 </html>

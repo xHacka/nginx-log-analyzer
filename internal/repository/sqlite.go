@@ -118,7 +118,10 @@ func (r *SQLiteRepository) Query(filters QueryFilters, limit, offset int) ([]mod
 
 	orderBy := "time"
 	if filters.SortBy != "" {
-		allowed := map[string]bool{"time": true, "status": true, "path": true, "host": true, "remote_addr": true, "bytes": true}
+		allowed := map[string]bool{
+			"time": true, "status": true, "path": true, "host": true, "remote_addr": true, "bytes": true,
+			"method": true, "query": true, "protocol": true, "city": true, "country": true, "user_agent": true,
+		}
 		if allowed[filters.SortBy] {
 			orderBy = filters.SortBy
 		}

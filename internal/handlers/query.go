@@ -137,9 +137,13 @@ func buildSortColumns(base url.Values, currentSort string, currentDesc bool) []S
 		{"Host", "host"},
 		{"Method", "method"},
 		{"Path", "path"},
+		{"Query", "query"},
+		{"Protocol", "protocol"},
 		{"Status", "status"},
 		{"Bytes", "bytes"},
+		{"City", "city"},
 		{"Country", "country"},
+		{"User Agent", "user_agent"},
 	}
 	if currentSort == "" {
 		currentSort = "time"
