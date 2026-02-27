@@ -259,8 +259,8 @@ body.page-dashboard {
   margin: 0;
   padding: 1rem 1.1rem;
   border-radius: 10px;
-  background: color-mix(in srgb, var(--surface) 65%, #020617);
-  border: 1px solid var(--border);
+  background: #020617;
+  border: 1px solid rgba(148, 163, 184, 0.25);
   overflow-x: auto;
 }
 .json-preview code {

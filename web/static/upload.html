@@ -69,22 +69,20 @@
     <div class="container mt-5">
       <div class="box example-card">
         <p class="subtitle is-6 mb-3">Example JSON line format</p>
-         <pre class="json-preview">
-            <code>{
-            <span class="json-key">"time"</span>       : <span class="json-string">"$msec"</span>,                 <span class="json-comment">// epoch seconds with milliseconds</span>
-            <span class="json-key">"remote_addr"</span>: <span class="json-string">"$remote_addr"</span>,          <span class="json-comment">// client IP address</span>
-            <span class="json-key">"host"</span>       : <span class="json-string">"$host"</span>,                 <span class="json-comment">// requested host/domain</span>
-            <span class="json-key">"method"</span>     : <span class="json-string">"$request_method"</span>,       <span class="json-comment">// HTTP method</span>
-            <span class="json-key">"path"</span>       : <span class="json-string">"$uri"</span>,                  <span class="json-comment">// URL path without query</span>
-            <span class="json-key">"q"</span>          : <span class="json-string">"$args"</span>,                 <span class="json-comment">// query string arguments</span>
-            <span class="json-key">"protocol"</span>   : <span class="json-string">"$server_protocol"</span>,      <span class="json-comment">// HTTP protocol version</span>
-            <span class="json-key">"status"</span>     : <span class="json-string">"$status"</span>,               <span class="json-comment">// response status code</span>
-            <span class="json-key">"bytes"</span>      : <span class="json-string">"$body_bytes_sent"</span>,      <span class="json-comment">// response size in bytes</span>
-            <span class="json-key">"city"</span>       : <span class="json-string">"$geo_city_name"</span>,        <span class="json-comment">// geoip city (if available)</span>
-            <span class="json-key">"country"</span>    : <span class="json-string">"$geo_country_code"</span>,     <span class="json-comment">// geoip country code</span>
-            <span class="json-key">"user_agent"</span> : <span class="json-string">"$http_user_agent"</span>       <span class="json-comment">// client user agent</span>
-          }</code>
-        </pre>
+        <pre class="json-preview"><code>{
+          <span class="json-key">"time"</span>       : <span class="json-string">"$msec"</span>,                 <span class="json-comment">// epoch seconds with milliseconds</span>
+          <span class="json-key">"remote_addr"</span>: <span class="json-string">"$remote_addr"</span>,          <span class="json-comment">// client IP address</span>
+          <span class="json-key">"host"</span>       : <span class="json-string">"$host"</span>,                 <span class="json-comment">// requested host/domain</span>
+          <span class="json-key">"method"</span>     : <span class="json-string">"$request_method"</span>,       <span class="json-comment">// HTTP method</span>
+          <span class="json-key">"path"</span>       : <span class="json-string">"$uri"</span>,                  <span class="json-comment">// URL path without query</span>
+          <span class="json-key">"q"</span>          : <span class="json-string">"$args"</span>,                 <span class="json-comment">// query string arguments</span>
+          <span class="json-key">"protocol"</span>   : <span class="json-string">"$server_protocol"</span>,      <span class="json-comment">// HTTP protocol version</span>
+          <span class="json-key">"status"</span>     : <span class="json-string">"$status"</span>,               <span class="json-comment">// response status code</span>
+          <span class="json-key">"bytes"</span>      : <span class="json-string">"$body_bytes_sent"</span>,      <span class="json-comment">// response size in bytes</span>
+          <span class="json-key">"city"</span>       : <span class="json-string">"$geo_city_name"</span>,        <span class="json-comment">// geoip city (if available)</span>
+          <span class="json-key">"country"</span>    : <span class="json-string">"$geo_country_code"</span>,     <span class="json-comment">// geoip country code</span>
+          <span class="json-key">"user_agent"</span> : <span class="json-string">"$http_user_agent"</span>       <span class="json-comment">// client user agent</span>
+}</code></pre>
       </div>
     </div>
   </section>
