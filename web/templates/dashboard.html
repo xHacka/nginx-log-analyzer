@@ -63,11 +63,16 @@
   </div>
 </div>
 
+<div id="chartDataByHour" hidden>{{.RequestsByHourJSON}}</div>
+<div id="chartDataByStatus" hidden>{{.StatusDistJSON}}</div>
+<div id="chartDataByCountry" hidden>{{.TopCountriesJSON}}</div>
+<div id="chartDataByPath" hidden>{{.TopPathsJSON}}</div>
+
 <script>
-  const byHour    = {{.RequestsByHourJSON}} || [];
-  const byStatus  = {{.StatusDistJSON}}     || [];
-  const byCountry = {{.TopCountriesJSON}}   || [];
-  const byPath    = {{.TopPathsJSON}}       || [];
+  const byHour    = JSON.parse(document.getElementById('chartDataByHour').textContent || '[]');
+  const byStatus  = JSON.parse(document.getElementById('chartDataByStatus').textContent || '[]');
+  const byCountry = JSON.parse(document.getElementById('chartDataByCountry').textContent || '[]');
+  const byPath    = JSON.parse(document.getElementById('chartDataByPath').textContent || '[]');
 
   const sharedScaleOpts = {
     grid: { color: 'rgba(0,0,0,.06)' },

@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"html/template"
 	"net/http"
 	"time"
 
@@ -17,10 +16,10 @@ type DashboardHandler struct {
 type DashboardPageData struct {
 	PageID string
 	*repository.DashboardStats
-	RequestsByHourJSON   template.JS
-	StatusDistJSON       template.JS
-	TopCountriesJSON     template.JS
-	TopPathsJSON         template.JS
+	RequestsByHourJSON   string
+	StatusDistJSON       string
+	TopCountriesJSON     string
+	TopPathsJSON         string
 }
 
 func (h *DashboardHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -37,10 +36,10 @@ func (h *DashboardHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	data := DashboardPageData{
 		PageID:              "dashboard",
 		DashboardStats:      stats,
-		RequestsByHourJSON:   template.JS(j1),
-		StatusDistJSON:      template.JS(j2),
-		TopCountriesJSON:    template.JS(j3),
-		TopPathsJSON:        template.JS(j4),
+		RequestsByHourJSON:   string(j1),
+		StatusDistJSON:      string(j2),
+		TopCountriesJSON:    string(j3),
+		TopPathsJSON:        string(j4),
 	}
 	if err := h.Template.ExecuteTemplate(w, "base", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

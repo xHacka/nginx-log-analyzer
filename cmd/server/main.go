@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/xHacka/nginx-log-analyzer/internal/config"
+	"github.com/xHacka/nginx-log-analyzer/internal/csrf"
 	"github.com/xHacka/nginx-log-analyzer/internal/handlers"
 	"github.com/xHacka/nginx-log-analyzer/internal/ingest"
 	"github.com/xHacka/nginx-log-analyzer/internal/repository"
@@ -24,7 +25,7 @@ func main() {
 		log.Fatalf("config: %v", err)
 	}
 
-	if err := os.MkdirAll(filepath.Dir(cfg.DBPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(cfg.DBPath), 0700); err != nil {
 		log.Fatalf("mkdir: %v", err)
 	}
 
@@ -80,9 +81,12 @@ func main() {
 	r.Get("/", dh.ServeHTTP)
 	r.Get("/query", qh.ServeHTTP)
 	if cfg.UploadEnabled {
-		r.Post("/upload", uh.ServeHTTP)
-		r.Get("/upload", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, "web/static/upload.html")
+		r.Route("/upload", func(sub chi.Router) {
+			sub.Use(csrf.Protect)
+			sub.Get("/", func(w http.ResponseWriter, r *http.Request) {
+				http.ServeFile(w, r, "web/static/upload.html")
+			})
+			sub.Post("/", uh.ServeHTTP)
 		})
 	}
 
