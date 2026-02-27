@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"html/template"
 	"net/http"
 	"time"
 
@@ -9,12 +10,14 @@ import (
 )
 
 type DashboardHandler struct {
-	Repo     repository.LogRepository
-	Template *template.Template
+	Repo          repository.LogRepository
+	Template      *template.Template
+	UploadEnabled bool
 }
 
 type DashboardPageData struct {
-	PageID string
+	PageID        string
+	UploadEnabled bool
 	*repository.DashboardStats
 	RequestsByHourJSON   string
 	StatusDistJSON       string
@@ -35,6 +38,7 @@ func (h *DashboardHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	j4, _ := json.Marshal(stats.TopPaths)
 	data := DashboardPageData{
 		PageID:              "dashboard",
+		UploadEnabled:       h.UploadEnabled,
 		DashboardStats:      stats,
 		RequestsByHourJSON:   string(j1),
 		StatusDistJSON:      string(j2),

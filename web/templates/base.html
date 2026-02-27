@@ -36,7 +36,7 @@
         <div class="navbar-end">
           <a class="navbar-item{{if eq .PageID "dashboard"}} is-active{{end}}" href="/">Dashboard</a>
           <a class="navbar-item{{if eq .PageID "query"}} is-active{{end}}" href="/query">Query</a>
-          <a class="navbar-item{{if eq .PageID "upload"}} is-active{{end}}" href="/upload">Upload</a>
+          {{if .UploadEnabled}}<a class="navbar-item{{if eq .PageID "upload"}} is-active{{end}}" href="/upload">Upload</a>{{end}}
           <div class="navbar-item">
             <button id="themeToggle" class="button is-small theme-toggle" type="button">Switch to Dark</button>
           </div>

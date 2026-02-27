@@ -15,8 +15,9 @@ import (
 const pageSize = 50
 
 type QueryHandler struct {
-	Repo     repository.LogRepository
-	Template *template.Template
+	Repo          repository.LogRepository
+	Template      *template.Template
+	UploadEnabled bool
 }
 
 type SortableColumn struct {
@@ -28,15 +29,16 @@ type SortableColumn struct {
 }
 
 type QueryPageData struct {
-	PageID   string
-	Entries  []models.LogEntry
-	Total    int
-	Page     int
-	Pages    int
-	Filters  QueryFormFilters
-	PrevURL  string
-	NextURL  string
-	Columns  []SortableColumn
+	PageID        string
+	UploadEnabled bool
+	Entries       []models.LogEntry
+	Total         int
+	Page          int
+	Pages         int
+	Filters       QueryFormFilters
+	PrevURL       string
+	NextURL       string
+	Columns       []SortableColumn
 }
 
 type QueryFormFilters struct {
@@ -101,8 +103,9 @@ func (h *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	columns := buildSortColumns(baseQuery, filters.SortBy, filters.SortDesc)
 
 	data := QueryPageData{
-		PageID:  "query",
-		Entries: entries,
+		PageID:        "query",
+		UploadEnabled: h.UploadEnabled,
+		Entries:       entries,
 		Total:   total,
 		Page:    page,
 		Pages:   pages,
