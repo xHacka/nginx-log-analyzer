@@ -8,56 +8,48 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.25'
 
-      - name: Get version
-        id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-
-      - name: Build
+      - name: Build all targets
         run: |
+          VERSION="${GITHUB_REF#refs/tags/}"
           mkdir -p dist
+
           for target in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64; do
             os=$(echo $target | cut -d/ -f1)
             arch=$(echo $target | cut -d/ -f2)
             ext=""
             [ "$os" = "windows" ] && ext=".exe"
-            GOOS=$os GOARCH=$arch go build -ldflags "-s -w" -o dist/uploader-$os-$arch$ext .
+
+            bin="nginx-log-analyzer${ext}"
+            GOOS=$os GOARCH=$arch go build -ldflags "-s -w" -o "build/${bin}" ./cmd/server
+
+            staging="nginx-log-analyzer-${VERSION}-${os}-${arch}"
+            mkdir -p "staging/${staging}"
+            cp "build/${bin}" "staging/${staging}/"
+            cp config.yaml "staging/${staging}/"
+            cp -r web "staging/${staging}/"
+
+            if [ "$os" = "windows" ]; then
+              (cd staging && zip -r "../dist/${staging}.zip" "${staging}")
+            else
+              tar -czf "dist/${staging}.tar.gz" -C staging "${staging}"
+            fi
+
+            rm -rf build staging
           done
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: uploader-${{ steps.version.outputs.VERSION }}
-          path: dist/
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: uploader-${{ github.ref_name }}
-
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           draft: false
           generate_release_notes: true
-          files: |
-            uploader-linux-amd64
-            uploader-linux-arm64
-            uploader-darwin-amd64
-            uploader-darwin-arm64
-            uploader-windows-amd64.exe
+          files: dist/*
