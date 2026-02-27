@@ -1,33 +1,54 @@
+{{define "base"}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{block "title" .}}Nginx Log Analyzer{{end}}</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
-  <style>
-    nav ul { margin: 0; }
-    .chart-container { position: relative; height: 300px; margin: 1rem 0; }
-    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
-    .card { padding: 1rem; background: var(--pico-card-background-color); border-radius: var(--pico-border-radius); }
-  </style>
+  <link rel="stylesheet" href="/static/css/bulma.min.css">
+  <link rel="stylesheet" href="/static/css/style.css">
   {{block "head" .}}{{end}}
 </head>
 <body>
-  <header class="container">
-    <nav>
-      <ul>
-        <li><strong>Nginx Log Analyzer</strong></li>
-      </ul>
-      <ul>
-        <li><a href="/">Dashboard</a></li>
-        <li><a href="/query">Query</a></li>
-        <li><a href="/upload">Upload</a></li>
-      </ul>
-    </nav>
-  </header>
-  <main class="container">
-    {{block "content" .}}{{end}}
-  </main>
+  <nav class="navbar" role="navigation" aria-label="main navigation">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-item has-text-weight-bold is-size-5" href="/">Nginx Log Analyzer</a>
+        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="mainNav">
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+        </a>
+      </div>
+      <div id="mainNav" class="navbar-menu">
+        <div class="navbar-end">
+          <a class="navbar-item{{if eq .PageID "dashboard"}} is-active{{end}}" href="/">Dashboard</a>
+          <a class="navbar-item{{if eq .PageID "query"}} is-active{{end}}" href="/query">Query</a>
+          <a class="navbar-item{{if eq .PageID "upload"}} is-active{{end}}" href="/upload">Upload</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <section class="section">
+    <div class="container">
+      {{block "content" .}}{{end}}
+    </div>
+  </section>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const burger = document.querySelector('.navbar-burger');
+      if (burger) {
+        burger.addEventListener('click', () => {
+          const target = document.getElementById(burger.dataset.target);
+          burger.classList.toggle('is-active');
+          target.classList.toggle('is-active');
+        });
+      }
+    });
+  </script>
 </body>
 </html>
+{{end}}

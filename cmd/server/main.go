@@ -35,33 +35,49 @@ func main() {
 	defer sqliteRepo.Close()
 	var repo repository.LogRepository = sqliteRepo
 
-	// Template funcs
 	funcMap := template.FuncMap{
 		"formatTime": func(t float64) string {
 			return time.Unix(int64(t), 0).Format("2006-01-02 15:04:05")
 		},
+		"statusClass": func(status int) string {
+			switch {
+			case status < 300:
+				return "is-success"
+			case status < 400:
+				return "is-info"
+			case status < 500:
+				return "is-warning"
+			default:
+				return "is-danger"
+			}
+		},
 	}
 
-	tmpl, err := template.New("").Funcs(funcMap).ParseGlob("web/templates/*.html")
-	if err != nil {
-		log.Fatalf("templates: %v", err)
+	parseTmpl := func(page string) *template.Template {
+		t, err := template.New("").Funcs(funcMap).ParseFiles("web/templates/base.html", "web/templates/"+page)
+		if err != nil {
+			log.Fatalf("templates (%s): %v", page, err)
+		}
+		return t
 	}
+	tmplDashboard := parseTmpl("dashboard.html")
+	tmplQuery := parseTmpl("query.html")
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	dh := &handlers.DashboardHandler{Repo: repo, Template: tmpl}
-	qh := &handlers.QueryHandler{Repo: repo, Template: tmpl}
+	dh := &handlers.DashboardHandler{Repo: repo, Template: tmplDashboard}
+	qh := &handlers.QueryHandler{Repo: repo, Template: tmplQuery}
 	uh := &handlers.UploadHandler{Repo: repo}
 	r.Get("/", dh.ServeHTTP)
 	r.Get("/query", qh.ServeHTTP)
 	r.Post("/upload", uh.ServeHTTP)
-
-	// Upload form page
 	r.Get("/upload", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "web/static/upload.html")
 	})
+
+	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
 
 	// Retention job
 	stopRetention := make(chan struct{})

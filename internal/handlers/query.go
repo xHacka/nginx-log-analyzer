@@ -18,7 +18,16 @@ type QueryHandler struct {
 	Template *template.Template
 }
 
+type SortableColumn struct {
+	Name    string
+	Field   string
+	URL     string
+	Active  bool
+	Desc    bool
+}
+
 type QueryPageData struct {
+	PageID   string
 	Entries  []models.LogEntry
 	Total    int
 	Page     int
@@ -26,6 +35,7 @@ type QueryPageData struct {
 	Filters  QueryFormFilters
 	PrevURL  string
 	NextURL  string
+	Columns  []SortableColumn
 }
 
 type QueryFormFilters struct {
@@ -87,7 +97,10 @@ func (h *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		nextURL = "?" + q.Encode()
 	}
 
+	columns := buildSortColumns(baseQuery, filters.SortBy, filters.SortDesc)
+
 	data := QueryPageData{
+		PageID:  "query",
 		Entries: entries,
 		Total:   total,
 		Page:    page,
@@ -95,8 +108,9 @@ func (h *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Filters: filters,
 		PrevURL: prevURL,
 		NextURL: nextURL,
+		Columns: columns,
 	}
-	if err := h.Template.ExecuteTemplate(w, "query.html", data); err != nil {
+	if err := h.Template.ExecuteTemplate(w, "base", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -114,6 +128,50 @@ func parseQueryFilters(r *http.Request) QueryFormFilters {
 		SortBy:     r.URL.Query().Get("sort"),
 		SortDesc:   r.URL.Query().Get("order") == "desc",
 	}
+}
+
+func buildSortColumns(base url.Values, currentSort string, currentDesc bool) []SortableColumn {
+	defs := []struct{ Name, Field string }{
+		{"Time", "time"},
+		{"IP", "remote_addr"},
+		{"Host", "host"},
+		{"Method", "method"},
+		{"Path", "path"},
+		{"Status", "status"},
+		{"Bytes", "bytes"},
+		{"Country", "country"},
+	}
+	if currentSort == "" {
+		currentSort = "time"
+	}
+	cols := make([]SortableColumn, len(defs))
+	for i, d := range defs {
+		active := d.Field == currentSort
+		newDesc := true
+		if active && currentDesc {
+			newDesc = false
+		}
+		q := make(url.Values)
+		for k, v := range base {
+			if k != "sort" && k != "order" && k != "page" {
+				q[k] = v
+			}
+		}
+		q.Set("sort", d.Field)
+		if newDesc {
+			q.Set("order", "desc")
+		} else {
+			q.Set("order", "asc")
+		}
+		cols[i] = SortableColumn{
+			Name:   d.Name,
+			Field:  d.Field,
+			URL:    "?" + q.Encode(),
+			Active: active,
+			Desc:   currentDesc && active,
+		}
+	}
+	return cols
 }
 
 func toRepoFilters(f QueryFormFilters) repository.QueryFilters {

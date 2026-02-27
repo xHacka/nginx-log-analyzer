@@ -1,0 +1,111 @@
+/* ── Stat Cards ────────────────────────────────────────── */
+.stat-card {
+  border-left: 4px solid hsl(171, 100%, 41%);
+}
+.stat-card:nth-child(2) { border-left-color: #3b82f6; }
+.stat-card:nth-child(3) { border-left-color: #f59e0b; }
+.stat-card:nth-child(4) { border-left-color: #8b5cf6; }
+.stat-card .stat-label {
+  font-size: .8rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: #6b7280;
+  margin-bottom: .25rem;
+}
+.stat-card .stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: #1f2937;
+}
+
+/* ── Chart Panels ──────────────────────────────────────── */
+.chart-container {
+  position: relative;
+  height: 280px;
+}
+
+/* ── Status Badges (custom overrides on Bulma tags) ───── */
+.status-badge {
+  font-variant-numeric: tabular-nums;
+  min-width: 3em;
+  justify-content: center;
+}
+
+/* ── Filter Panel ──────────────────────────────────────── */
+.filter-panel fieldset {
+  min-width: 0;
+}
+.filter-panel .select,
+.filter-panel .select select {
+  width: 100%;
+  max-width: 100%;
+}
+.filter-panel {
+  margin-bottom: 1.5rem;
+}
+.filter-panel summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1.05rem;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .75rem 0;
+}
+.filter-panel summary::-webkit-details-marker { display: none; }
+.filter-panel summary::before {
+  content: "\25B6";
+  font-size: .65em;
+  transition: transform .2s;
+}
+.filter-panel[open] summary::before {
+  transform: rotate(90deg);
+}
+
+/* ── Log Table ─────────────────────────────────────────── */
+.log-table {
+  font-size: .875rem;
+}
+.log-table th { white-space: nowrap; }
+.log-table th a { display: inline-flex; align-items: center; gap: .3em; }
+.log-table th a:hover { opacity: .7; }
+.log-table td { vertical-align: middle; }
+.log-table code {
+  font-size: .8rem;
+  word-break: break-all;
+}
+
+/* ── Upload Drop Zone ──────────────────────────────────── */
+.drop-zone {
+  border: 2px dashed #dbdbdb;
+  border-radius: 6px;
+  padding: 3rem 2rem;
+  text-align: center;
+  transition: border-color .2s, background .2s;
+  cursor: pointer;
+}
+.drop-zone:hover,
+.drop-zone.drag-over {
+  border-color: hsl(171, 100%, 41%);
+  background: hsla(171, 100%, 41%, .04);
+}
+.drop-zone p {
+  margin-top: .75rem;
+  color: #6b7280;
+  font-size: .95rem;
+}
+.drop-zone input[type="file"] { display: none; }
+
+/* ── Misc ──────────────────────────────────────────────── */
+.method-tag {
+  font-family: monospace;
+  font-size: .8rem;
+  font-weight: 600;
+}
+.hidden { display: none !important; }
+
+.columns > .column {
+  flex: 1 !important;
+}

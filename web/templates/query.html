@@ -1,99 +1,155 @@
-{{define "query.html"}}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Query - Nginx Log Analyzer</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
-  <style>
-    nav ul { margin: 0; }
-    .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.5rem; margin-bottom: 1rem; }
-    .filters input, .filters select { margin-bottom: 0; }
-    table { font-size: 0.9rem; }
-    .pagination { margin-top: 1rem; }
-  </style>
-</head>
-<body>
-  <header class="container">
-    <nav>
-      <ul><li><strong>Nginx Log Analyzer</strong></li></ul>
-      <ul>
-        <li><a href="/">Dashboard</a></li>
-        <li><a href="/query">Query</a></li>
-        <li><a href="/upload">Upload</a></li>
-      </ul>
-    </nav>
-  </header>
-  <main class="container">
-    <h1>Query Logs</h1>
+{{define "title"}}Query Logs - Nginx Log Analyzer{{end}}
+{{define "head"}}{{end}}
 
-    <form method="get" action="/query" class="filters">
-      <input type="datetime-local" name="time_from" placeholder="From" value="{{.Filters.TimeFrom}}">
-      <input type="datetime-local" name="time_to" placeholder="To" value="{{.Filters.TimeTo}}">
-      <input type="number" name="status" placeholder="Status" value="{{.Filters.Status}}" min="100" max="599">
-      <input type="text" name="country" placeholder="Country" value="{{.Filters.Country}}">
-      <input type="text" name="path" placeholder="Path contains" value="{{.Filters.PathContains}}">
-      <input type="text" name="method" placeholder="Method" value="{{.Filters.Method}}">
-      <input type="text" name="host" placeholder="Host" value="{{.Filters.Host}}">
-      <input type="text" name="user_agent" placeholder="User-Agent contains" value="{{.Filters.UserAgent}}">
-      <select name="sort">
-        <option value="time" {{if eq .Filters.SortBy "time"}}selected{{end}}>Time</option>
-        <option value="status" {{if eq .Filters.SortBy "status"}}selected{{end}}>Status</option>
-        <option value="path" {{if eq .Filters.SortBy "path"}}selected{{end}}>Path</option>
-        <option value="host" {{if eq .Filters.SortBy "host"}}selected{{end}}>Host</option>
-        <option value="remote_addr" {{if eq .Filters.SortBy "remote_addr"}}selected{{end}}>IP</option>
-      </select>
-      <select name="order">
-        <option value="desc" {{if .Filters.SortDesc}}selected{{end}}>Desc</option>
-        <option value="asc" {{if not .Filters.SortDesc}}selected{{end}}>Asc</option>
-      </select>
-      <button type="submit">Filter</button>
-    </form>
+{{define "content"}}
+<h1 class="title">Query Logs</h1>
 
-    <p>Showing {{len .Entries}} of {{.Total}} entries (page {{.Page}} of {{.Pages}})</p>
+<details class="box filter-panel" open>
+  <summary>Filters</summary>
+  <form method="get" action="/query">
+    <div class="columns">
+      <div class="column is-half">
+        <fieldset>
+          <legend class="label">General</legend>
+          <div class="field">
+            <label class="label is-small" for="f-from">From</label>
+            <div class="control">
+              <input class="input is-small" type="datetime-local" id="f-from" name="time_from" value="{{.Filters.TimeFrom}}">
+            </div>
+          </div>
+          <div class="field">
+            <label class="label is-small" for="f-to">To</label>
+            <div class="control">
+              <input class="input is-small" type="datetime-local" id="f-to" name="time_to" value="{{.Filters.TimeTo}}">
+            </div>
+          </div>
+          <div class="field">
+            <label class="label is-small" for="f-country">Country Code</label>
+            <div class="control">
+              <input class="input is-small" type="text" id="f-country" name="country" placeholder="US, DE, ..." value="{{.Filters.Country}}">
+            </div>
+          </div>
+          <div class="field">
+            <label class="label is-small" for="f-ua">User-Agent</label>
+            <div class="control">
+              <input class="input is-small" type="text" id="f-ua" name="user_agent" placeholder="curl, Mozilla, ..." value="{{.Filters.UserAgent}}">
+            </div>
+          </div>
+        </fieldset>
+      </div>
 
-    <figure>
-      <table role="grid">
-        <thead>
-          <tr>
-            <th>Time</th>
-            <th>IP</th>
-            <th>Host</th>
-            <th>Method</th>
-            <th>Path</th>
-            <th>Status</th>
-            <th>Bytes</th>
-            <th>Country</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{range .Entries}}
-          <tr>
-            <td>{{formatTime .Time}}</td>
-            <td>{{.RemoteAddr}}</td>
-            <td>{{.Host}}</td>
-            <td>{{.Method}}</td>
-            <td><code>{{.Path}}</code></td>
-            <td>{{.Status}}</td>
-            <td>{{.Bytes}}</td>
-            <td>{{.Country}}</td>
-          </tr>
-          {{end}}
-        </tbody>
-      </table>
-    </figure>
+      <div class="column is-half">
+        <fieldset>
+          <legend class="label">Request</legend>
+          <div class="field">
+            <label class="label is-small" for="f-method">Method</label>
+            <div class="control">
+              <div class="select is-small is-fullwidth">
+                <select id="f-method" name="method">
+                  <option value="">Any</option>
+                  <option value="GET"{{if eq .Filters.Method "GET"}} selected{{end}}>GET</option>
+                  <option value="POST"{{if eq .Filters.Method "POST"}} selected{{end}}>POST</option>
+                  <option value="PUT"{{if eq .Filters.Method "PUT"}} selected{{end}}>PUT</option>
+                  <option value="DELETE"{{if eq .Filters.Method "DELETE"}} selected{{end}}>DELETE</option>
+                  <option value="PATCH"{{if eq .Filters.Method "PATCH"}} selected{{end}}>PATCH</option>
+                  <option value="HEAD"{{if eq .Filters.Method "HEAD"}} selected{{end}}>HEAD</option>
+                  <option value="OPTIONS"{{if eq .Filters.Method "OPTIONS"}} selected{{end}}>OPTIONS</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <label class="label is-small" for="f-status">Status</label>
+            <div class="control">
+              <input class="input is-small" type="number" id="f-status" name="status" placeholder="e.g. 200" value="{{.Filters.Status}}" min="100" max="599">
+            </div>
+          </div>
+          <div class="field">
+            <label class="label is-small" for="f-path">Path</label>
+            <div class="control">
+              <input class="input is-small" type="text" id="f-path" name="path" placeholder="/api/..." value="{{.Filters.PathContains}}">
+            </div>
+          </div>
+          <div class="field">
+            <label class="label is-small" for="f-host">Host</label>
+            <div class="control">
+              <input class="input is-small" type="text" id="f-host" name="host" placeholder="example.com" value="{{.Filters.Host}}">
+            </div>
+          </div>
+        </fieldset>
+      </div>
+    </div>
 
-    <nav class="pagination">
-      {{if .PrevURL}}
-      <a href="{{.PrevURL}}" role="button">Previous</a>
+    <div class="field is-grouped mt-3">
+      <div class="control">
+        <button class="button is-primary is-small" type="submit">Apply Filters</button>
+      </div>
+      <div class="control">
+        <a href="/query" class="button is-light is-small">Clear All</a>
+      </div>
+    </div>
+  </form>
+</details>
+
+<div class="level mb-4">
+  <div class="level-left">
+    <div class="level-item">
+      <p class="is-size-7 has-text-grey">{{.Total}} results &middot; page {{.Page}} of {{.Pages}}</p>
+    </div>
+  </div>
+  <div class="level-right">
+    <div class="level-item">
+      <p class="is-size-7 has-text-grey">Showing {{len .Entries}} entries</p>
+    </div>
+  </div>
+</div>
+
+<div class="table-container">
+  <table class="table is-fullwidth is-striped is-hoverable log-table">
+    <thead>
+      <tr>
+        {{range .Columns}}
+        <th>
+          <a href="{{.URL}}" class="has-text-dark" style="text-decoration:none">
+            {{.Name}}
+            {{if .Active}}
+              {{if .Desc}}&darr;{{else}}&uarr;{{end}}
+            {{end}}
+          </a>
+        </th>
+        {{end}}
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Entries}}
+      <tr>
+        <td>{{formatTime .Time}}</td>
+        <td>{{.RemoteAddr}}</td>
+        <td>{{.Host}}</td>
+        <td><span class="method-tag">{{.Method}}</span></td>
+        <td><code>{{.Path}}</code></td>
+        <td><span class="tag status-badge {{statusClass .Status}}">{{.Status}}</span></td>
+        <td>{{.Bytes}}</td>
+        <td>{{.Country}}</td>
+      </tr>
       {{end}}
-      <span>Page {{.Page}} / {{.Pages}}</span>
-      {{if .NextURL}}
-      <a href="{{.NextURL}}" role="button">Next</a>
-      {{end}}
-    </nav>
-  </main>
-</body>
-</html>
+    </tbody>
+  </table>
+</div>
+
+<nav class="pagination is-centered is-small mt-5" role="navigation" aria-label="pagination">
+  {{if .PrevURL}}
+  <a class="pagination-previous" href="{{.PrevURL}}">Previous</a>
+  {{else}}
+  <a class="pagination-previous" disabled>Previous</a>
+  {{end}}
+  {{if .NextURL}}
+  <a class="pagination-next" href="{{.NextURL}}">Next</a>
+  {{else}}
+  <a class="pagination-next" disabled>Next</a>
+  {{end}}
+  <ul class="pagination-list">
+    <li><span class="pagination-link is-current">{{.Page}} / {{.Pages}}</span></li>
+  </ul>
+</nav>
 {{end}}

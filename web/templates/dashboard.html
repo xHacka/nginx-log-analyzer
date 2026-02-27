@@ -1,120 +1,150 @@
-{{define "dashboard.html"}}
-{{template "base" .}}
+{{define "title"}}Dashboard - Nginx Log Analyzer{{end}}
+
+{{define "head"}}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {{end}}
 
-{{define "base"}}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - Nginx Log Analyzer</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    nav ul { margin: 0; }
-    .chart-container { position: relative; height: 300px; margin: 1rem 0; }
-    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
-    .card { padding: 1rem; background: var(--pico-card-background-color); border-radius: var(--pico-border-radius); }
-  </style>
-</head>
-<body>
-  <header class="container">
-    <nav>
-      <ul><li><strong>Nginx Log Analyzer</strong></li></ul>
-      <ul>
-        <li><a href="/">Dashboard</a></li>
-        <li><a href="/query">Query</a></li>
-        <li><a href="/upload">Upload</a></li>
-      </ul>
-    </nav>
-  </header>
-  <main class="container">
-    <h1>Dashboard</h1>
-    <div class="cards">
-      <div class="card">
-        <strong>Requests (24h)</strong>
-        <p>{{.TotalRequests24h}}</p>
-      </div>
-      <div class="card">
-        <strong>Requests (7d)</strong>
-        <p>{{.TotalRequests7d}}</p>
-      </div>
-      <div class="card">
-        <strong>Error Rate (24h)</strong>
-        <p>{{printf "%.1f" .ErrorRate24h}}%</p>
-      </div>
-      <div class="card">
-        <strong>Unique IPs (24h)</strong>
-        <p>{{.UniqueIPs24h}}</p>
-      </div>
+{{define "content"}}
+<h1 class="title">Dashboard</h1>
+
+<div class="columns is-multiline mb-5">
+  <div class="column is-3-desktop is-6-tablet">
+    <div class="box stat-card">
+      <div class="stat-label">Requests (24h)</div>
+      <div class="stat-value">{{.TotalRequests24h}}</div>
     </div>
-
-    <div class="grid">
-      <div>
-        <h3>Requests Over Time</h3>
-        <div class="chart-container"><canvas id="chartRequests"></canvas></div>
-      </div>
-      <div>
-        <h3>Status Distribution</h3>
-        <div class="chart-container"><canvas id="chartStatus"></canvas></div>
-      </div>
+  </div>
+  <div class="column is-3-desktop is-6-tablet">
+    <div class="box stat-card">
+      <div class="stat-label">Requests (7d)</div>
+      <div class="stat-value">{{.TotalRequests7d}}</div>
     </div>
-
-    <div class="grid">
-      <div>
-        <h3>Top Countries</h3>
-        <div class="chart-container"><canvas id="chartCountries"></canvas></div>
-      </div>
-      <div>
-        <h3>Top Paths</h3>
-        <div class="chart-container"><canvas id="chartPaths"></canvas></div>
-      </div>
+  </div>
+  <div class="column is-3-desktop is-6-tablet">
+    <div class="box stat-card">
+      <div class="stat-label">Error Rate (24h)</div>
+      <div class="stat-value">{{printf "%.1f" .ErrorRate24h}}%</div>
     </div>
+  </div>
+  <div class="column is-3-desktop is-6-tablet">
+    <div class="box stat-card">
+      <div class="stat-label">Unique IPs (24h)</div>
+      <div class="stat-value">{{.UniqueIPs24h}}</div>
+    </div>
+  </div>
+</div>
 
-    <script>
-      const byHour = {{.RequestsByHourJSON}};
-      const byStatus = {{.StatusDistJSON}};
-      const byCountry = {{.TopCountriesJSON}};
-      const byPath = {{.TopPathsJSON}};
+<div class="columns">
+  <div class="column is-half">
+    <div class="box">
+      <h3 class="subtitle is-5">Requests Over Time</h3>
+      <div class="chart-container"><canvas id="chartRequests"></canvas></div>
+    </div>
+  </div>
+  <div class="column is-half">
+    <div class="box">
+      <h3 class="subtitle is-5">Status Distribution</h3>
+      <div class="chart-container"><canvas id="chartStatus"></canvas></div>
+    </div>
+  </div>
+</div>
 
-      new Chart(document.getElementById('chartRequests'), {
-        type: 'line',
-        data: {
-          labels: byHour.map(h => h.Hour),
-          datasets: [{ label: 'Requests', data: byHour.map(h => h.Count), borderColor: 'rgb(75, 192, 192)', fill: true }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
+<div class="columns">
+  <div class="column is-half">
+    <div class="box">
+      <h3 class="subtitle is-5">Top Countries</h3>
+      <div class="chart-container"><canvas id="chartCountries"></canvas></div>
+    </div>
+  </div>
+  <div class="column is-half">
+    <div class="box">
+      <h3 class="subtitle is-5">Top Paths</h3>
+      <div class="chart-container"><canvas id="chartPaths"></canvas></div>
+    </div>
+  </div>
+</div>
 
-      new Chart(document.getElementById('chartStatus'), {
-        type: 'doughnut',
-        data: {
-          labels: byStatus.map(s => String(s.Status)),
-          datasets: [{ data: byStatus.map(s => s.Count), backgroundColor: ['#22c55e','#3b82f6','#f59e0b','#ef4444'] }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
+<script>
+  const byHour    = {{.RequestsByHourJSON}} || [];
+  const byStatus  = {{.StatusDistJSON}}     || [];
+  const byCountry = {{.TopCountriesJSON}}   || [];
+  const byPath    = {{.TopPathsJSON}}       || [];
 
-      new Chart(document.getElementById('chartCountries'), {
-        type: 'bar',
-        data: {
-          labels: byCountry.map(c => c.Country || '(empty)'),
-          datasets: [{ label: 'Requests', data: byCountry.map(c => c.Count) }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y' }
-      });
+  const sharedScaleOpts = {
+    grid: { color: 'rgba(0,0,0,.06)' },
+    ticks: { font: { size: 11 } }
+  };
 
-      new Chart(document.getElementById('chartPaths'), {
-        type: 'bar',
-        data: {
-          labels: byPath.map(p => (p.Path || '/').substring(0, 40)),
-          datasets: [{ label: 'Requests', data: byPath.map(p => p.Count) }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y' }
-      });
-    </script>
-  </main>
-</body>
-</html>
+  if (byHour.length) {
+    new Chart(document.getElementById('chartRequests'), {
+      type: 'line',
+      data: {
+        labels: byHour.map(h => h.Hour.slice(5)),
+        datasets: [{
+          label: 'Requests',
+          data: byHour.map(h => h.Count),
+          borderColor: 'hsl(171, 100%, 41%)',
+          backgroundColor: 'hsla(171, 100%, 41%, .12)',
+          fill: true,
+          tension: .3
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { x: sharedScaleOpts, y: { ...sharedScaleOpts, beginAtZero: true } }
+      }
+    });
+  }
+
+  if (byStatus.length) {
+    const statusColors = byStatus.map(s => {
+      if (s.Status < 300) return '#48c78e';
+      if (s.Status < 400) return '#3e8ed0';
+      if (s.Status < 500) return '#ffe08a';
+      return '#f14668';
+    });
+    new Chart(document.getElementById('chartStatus'), {
+      type: 'doughnut',
+      data: {
+        labels: byStatus.map(s => String(s.Status)),
+        datasets: [{ data: byStatus.map(s => s.Count), backgroundColor: statusColors }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'right' } }
+      }
+    });
+  }
+
+  if (byCountry.length) {
+    new Chart(document.getElementById('chartCountries'), {
+      type: 'bar',
+      data: {
+        labels: byCountry.map(c => c.Country || '(unknown)'),
+        datasets: [{ label: 'Requests', data: byCountry.map(c => c.Count), borderRadius: 3, backgroundColor: 'hsl(217, 71%, 53%)' }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: { x: sharedScaleOpts, y: sharedScaleOpts }
+      }
+    });
+  }
+
+  if (byPath.length) {
+    new Chart(document.getElementById('chartPaths'), {
+      type: 'bar',
+      data: {
+        labels: byPath.map(p => (p.Path || '/').substring(0, 40)),
+        datasets: [{ label: 'Requests', data: byPath.map(p => p.Count), borderRadius: 3, backgroundColor: 'hsl(171, 100%, 41%)' }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: { x: sharedScaleOpts, y: sharedScaleOpts }
+      }
+    });
+  }
+</script>
 {{end}}
