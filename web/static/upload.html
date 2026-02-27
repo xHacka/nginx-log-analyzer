@@ -26,6 +26,9 @@
           <a class="navbar-item" href="/">Dashboard</a>
           <a class="navbar-item" href="/query">Query</a>
           <a class="navbar-item is-active" href="/upload">Upload</a>
+          <div class="navbar-item">
+            <button id="themeToggle" class="button is-small theme-toggle" type="button">Dark</button>
+          </div>
         </div>
       </div>
     </div>
@@ -88,12 +91,35 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
+      const applyTheme = (theme) => {
+        document.documentElement.setAttribute("data-theme", theme);
+        const themeToggle = document.getElementById("themeToggle");
+        if (themeToggle) {
+          themeToggle.textContent = theme === "dark" ? "Dark" : "Light";
+          themeToggle.setAttribute("aria-label", theme === "dark" ? "Switch to light theme" : "Switch to dark theme");
+        }
+      };
+
+      const stored = localStorage.getItem("theme");
+      const preferred = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      applyTheme(stored || preferred);
+
       const burger = document.querySelector(".navbar-burger");
       if (burger) {
         burger.addEventListener("click", () => {
           const target = document.getElementById(burger.dataset.target);
           burger.classList.toggle("is-active");
           target.classList.toggle("is-active");
+        });
+      }
+
+      const themeToggle = document.getElementById("themeToggle");
+      if (themeToggle) {
+        themeToggle.addEventListener("click", () => {
+          const current = document.documentElement.getAttribute("data-theme") || "light";
+          const next = current === "dark" ? "light" : "dark";
+          applyTheme(next);
+          localStorage.setItem("theme", next);
         });
       }
     });

@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="/static/css/style.css">
   {{block "head" .}}{{end}}
 </head>
-<body>
+<body class="page-{{.PageID}}">
   <nav class="navbar app-navbar" role="navigation" aria-label="main navigation">
     <div class="container">
       <div class="navbar-brand">
@@ -26,12 +26,15 @@
           <a class="navbar-item{{if eq .PageID "dashboard"}} is-active{{end}}" href="/">Dashboard</a>
           <a class="navbar-item{{if eq .PageID "query"}} is-active{{end}}" href="/query">Query</a>
           <a class="navbar-item{{if eq .PageID "upload"}} is-active{{end}}" href="/upload">Upload</a>
+          <div class="navbar-item">
+            <button id="themeToggle" class="button is-small theme-toggle" type="button">Dark</button>
+          </div>
         </div>
       </div>
     </div>
   </nav>
 
-  <section class="section">
+  <section class="section{{if eq .PageID "dashboard"}} section-dashboard{{end}}">
     {{if eq .PageID "query"}}
     <div class="query-layout">
       {{block "content" .}}{{end}}
@@ -45,12 +48,35 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      const applyTheme = (theme) => {
+        document.documentElement.setAttribute('data-theme', theme);
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+          themeToggle.textContent = theme === 'dark' ? 'Dark' : 'Light';
+          themeToggle.setAttribute('aria-label', theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+        }
+      };
+
+      const stored = localStorage.getItem('theme');
+      const preferred = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      applyTheme(stored || preferred);
+
       const burger = document.querySelector('.navbar-burger');
       if (burger) {
         burger.addEventListener('click', () => {
           const target = document.getElementById(burger.dataset.target);
           burger.classList.toggle('is-active');
           target.classList.toggle('is-active');
+        });
+      }
+
+      const themeToggle = document.getElementById('themeToggle');
+      if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+          const current = document.documentElement.getAttribute('data-theme') || 'light';
+          const next = current === 'light' ? 'dark' : 'light';
+          applyTheme(next);
+          localStorage.setItem('theme', next);
         });
       }
     });
