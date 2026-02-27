@@ -1,0 +1,146 @@
+package handlers
+
+import (
+	"html/template"
+	"net/http"
+	"net/url"
+	"strconv"
+	"time"
+
+	"github.com/xHacka/nginx-log-analyzer/internal/models"
+	"github.com/xHacka/nginx-log-analyzer/internal/repository"
+)
+
+const pageSize = 50
+
+type QueryHandler struct {
+	Repo     repository.LogRepository
+	Template *template.Template
+}
+
+type QueryPageData struct {
+	Entries  []models.LogEntry
+	Total    int
+	Page     int
+	Pages    int
+	Filters  QueryFormFilters
+	PrevURL  string
+	NextURL  string
+}
+
+type QueryFormFilters struct {
+	TimeFrom   string
+	TimeTo     string
+	Status     string
+	Country    string
+	PathContains string
+	Method     string
+	Host       string
+	UserAgent  string
+	SortBy     string
+	SortDesc   bool
+}
+
+func (h *QueryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	filters := parseQueryFilters(r)
+	page := 1
+	if p := r.URL.Query().Get("page"); p != "" {
+		if n, err := strconv.Atoi(p); err == nil && n > 0 {
+			page = n
+		}
+	}
+
+	repoFilters := toRepoFilters(filters)
+	offset := (page - 1) * pageSize
+	entries, total, err := h.Repo.Query(repoFilters, pageSize, offset)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	pages := (total + pageSize - 1) / pageSize
+	if pages < 1 {
+		pages = 1
+	}
+
+	baseQuery := r.URL.Query()
+	prevURL := ""
+	if page > 1 {
+		q := make(url.Values)
+		for k, v := range baseQuery {
+			if k != "page" {
+				q[k] = v
+			}
+		}
+		q.Set("page", strconv.Itoa(page-1))
+		prevURL = "?" + q.Encode()
+	}
+	nextURL := ""
+	if page < pages {
+		q := make(url.Values)
+		for k, v := range baseQuery {
+			if k != "page" {
+				q[k] = v
+			}
+		}
+		q.Set("page", strconv.Itoa(page+1))
+		nextURL = "?" + q.Encode()
+	}
+
+	data := QueryPageData{
+		Entries: entries,
+		Total:   total,
+		Page:    page,
+		Pages:   pages,
+		Filters: filters,
+		PrevURL: prevURL,
+		NextURL: nextURL,
+	}
+	if err := h.Template.ExecuteTemplate(w, "query.html", data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func parseQueryFilters(r *http.Request) QueryFormFilters {
+	return QueryFormFilters{
+		TimeFrom:   r.URL.Query().Get("time_from"),
+		TimeTo:     r.URL.Query().Get("time_to"),
+		Status:     r.URL.Query().Get("status"),
+		Country:    r.URL.Query().Get("country"),
+		PathContains: r.URL.Query().Get("path"),
+		Method:     r.URL.Query().Get("method"),
+		Host:       r.URL.Query().Get("host"),
+		UserAgent:  r.URL.Query().Get("user_agent"),
+		SortBy:     r.URL.Query().Get("sort"),
+		SortDesc:   r.URL.Query().Get("order") == "desc",
+	}
+}
+
+func toRepoFilters(f QueryFormFilters) repository.QueryFilters {
+	rf := repository.QueryFilters{SortBy: f.SortBy, SortDesc: f.SortDesc}
+	if f.TimeFrom != "" {
+		if t, err := time.Parse("2006-01-02T15:04", f.TimeFrom); err == nil {
+			rf.TimeFrom = &t
+		} else if t, err := time.Parse("2006-01-02", f.TimeFrom); err == nil {
+			rf.TimeFrom = &t
+		}
+	}
+	if f.TimeTo != "" {
+		if t, err := time.Parse("2006-01-02T15:04", f.TimeTo); err == nil {
+			rf.TimeTo = &t
+		} else if t, err := time.Parse("2006-01-02", f.TimeTo); err == nil {
+			rf.TimeTo = &t
+		}
+	}
+	if f.Status != "" {
+		if s, err := strconv.Atoi(f.Status); err == nil {
+			rf.Status = &s
+		}
+	}
+	rf.Country = f.Country
+	rf.PathContains = f.PathContains
+	rf.Method = f.Method
+	rf.Host = f.Host
+	rf.UserAgentContains = f.UserAgent
+	return rf
+}

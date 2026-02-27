@@ -1,0 +1,99 @@
+{{define "query.html"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Query - Nginx Log Analyzer</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <style>
+    nav ul { margin: 0; }
+    .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.5rem; margin-bottom: 1rem; }
+    .filters input, .filters select { margin-bottom: 0; }
+    table { font-size: 0.9rem; }
+    .pagination { margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <header class="container">
+    <nav>
+      <ul><li><strong>Nginx Log Analyzer</strong></li></ul>
+      <ul>
+        <li><a href="/">Dashboard</a></li>
+        <li><a href="/query">Query</a></li>
+        <li><a href="/upload">Upload</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main class="container">
+    <h1>Query Logs</h1>
+
+    <form method="get" action="/query" class="filters">
+      <input type="datetime-local" name="time_from" placeholder="From" value="{{.Filters.TimeFrom}}">
+      <input type="datetime-local" name="time_to" placeholder="To" value="{{.Filters.TimeTo}}">
+      <input type="number" name="status" placeholder="Status" value="{{.Filters.Status}}" min="100" max="599">
+      <input type="text" name="country" placeholder="Country" value="{{.Filters.Country}}">
+      <input type="text" name="path" placeholder="Path contains" value="{{.Filters.PathContains}}">
+      <input type="text" name="method" placeholder="Method" value="{{.Filters.Method}}">
+      <input type="text" name="host" placeholder="Host" value="{{.Filters.Host}}">
+      <input type="text" name="user_agent" placeholder="User-Agent contains" value="{{.Filters.UserAgent}}">
+      <select name="sort">
+        <option value="time" {{if eq .Filters.SortBy "time"}}selected{{end}}>Time</option>
+        <option value="status" {{if eq .Filters.SortBy "status"}}selected{{end}}>Status</option>
+        <option value="path" {{if eq .Filters.SortBy "path"}}selected{{end}}>Path</option>
+        <option value="host" {{if eq .Filters.SortBy "host"}}selected{{end}}>Host</option>
+        <option value="remote_addr" {{if eq .Filters.SortBy "remote_addr"}}selected{{end}}>IP</option>
+      </select>
+      <select name="order">
+        <option value="desc" {{if .Filters.SortDesc}}selected{{end}}>Desc</option>
+        <option value="asc" {{if not .Filters.SortDesc}}selected{{end}}>Asc</option>
+      </select>
+      <button type="submit">Filter</button>
+    </form>
+
+    <p>Showing {{len .Entries}} of {{.Total}} entries (page {{.Page}} of {{.Pages}})</p>
+
+    <figure>
+      <table role="grid">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>IP</th>
+            <th>Host</th>
+            <th>Method</th>
+            <th>Path</th>
+            <th>Status</th>
+            <th>Bytes</th>
+            <th>Country</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .Entries}}
+          <tr>
+            <td>{{formatTime .Time}}</td>
+            <td>{{.RemoteAddr}}</td>
+            <td>{{.Host}}</td>
+            <td>{{.Method}}</td>
+            <td><code>{{.Path}}</code></td>
+            <td>{{.Status}}</td>
+            <td>{{.Bytes}}</td>
+            <td>{{.Country}}</td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </figure>
+
+    <nav class="pagination">
+      {{if .PrevURL}}
+      <a href="{{.PrevURL}}" role="button">Previous</a>
+      {{end}}
+      <span>Page {{.Page}} / {{.Pages}}</span>
+      {{if .NextURL}}
+      <a href="{{.NextURL}}" role="button">Next</a>
+      {{end}}
+    </nav>
+  </main>
+</body>
+</html>
+{{end}}

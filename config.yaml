@@ -1,0 +1,4 @@
+log_path: ""  # empty = disable local ingest, e.g. "/var/log/nginx/access.json"
+db_path: "./data/access.db"
+retention_days: 30
+listen: ":8080"

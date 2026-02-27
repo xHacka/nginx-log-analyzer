@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload - Nginx Log Analyzer</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+</head>
+<body>
+  <header class="container">
+    <nav>
+      <ul><li><strong>Nginx Log Analyzer</strong></li></ul>
+      <ul>
+        <li><a href="/">Dashboard</a></li>
+        <li><a href="/query">Query</a></li>
+        <li><a href="/upload">Upload</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main class="container">
+    <h1>Upload Log File</h1>
+    <p>Upload a nginx JSON log file (one JSON object per line).</p>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+      <input type="file" name="logfile" accept=".json,.log,text/plain" required>
+      <button type="submit">Upload</button>
+    </form>
+    <div id="result"></div>
+    <script>
+      document.querySelector('form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const fd = new FormData(form);
+        const res = await fetch('/upload', { method: 'POST', body: fd });
+        const result = document.getElementById('result');
+        if (res.ok) {
+          const data = await res.json();
+          result.textContent = 'Ingested ' + data.ingested + ' entries.';
+        } else {
+          result.textContent = 'Error: ' + (await res.text() || res.statusText);
+        }
+      });
+    </script>
+  </main>
+</body>
+</html>

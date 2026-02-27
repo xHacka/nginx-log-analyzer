@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{block "title" .}}Nginx Log Analyzer{{end}}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <style>
+    nav ul { margin: 0; }
+    .chart-container { position: relative; height: 300px; margin: 1rem 0; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .card { padding: 1rem; background: var(--pico-card-background-color); border-radius: var(--pico-border-radius); }
+  </style>
+  {{block "head" .}}{{end}}
+</head>
+<body>
+  <header class="container">
+    <nav>
+      <ul>
+        <li><strong>Nginx Log Analyzer</strong></li>
+      </ul>
+      <ul>
+        <li><a href="/">Dashboard</a></li>
+        <li><a href="/query">Query</a></li>
+        <li><a href="/upload">Upload</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main class="container">
+    {{block "content" .}}{{end}}
+  </main>
+</body>
+</html>
