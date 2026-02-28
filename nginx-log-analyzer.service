@@ -1,0 +1,28 @@
+# nano /etc/systemd/system/nginx-log-analyzer.service
+[Unit]
+Description=Nginx Log Analyzer
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/nginx-log-analyzer
+ExecStart=/var/www/nginx-log-analyzer/nginx-log-analyzer
+Restart=always
+RestartSec=5
+
+# Security hardening (optional)
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/nginx-log-analyzer/data
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=uploader
+
+[Install]
+WantedBy=multi-user.target
